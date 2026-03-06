@@ -10,24 +10,29 @@ It is designed to run on desktop browsers, mobile (iPad/iPhone), and Raspberry P
 
 ---
 
-## File Naming Convention
-Files follow the pattern `ledbonsai-vMAJOR_MINOR.html` and `ledbonsai-vMAJOR_MINOR.md`.
-- The `.html` file is the working application code
-- The `.md` file contains documentation and version history for that version
-- The current latest version is the highest version number present (e.g., `v1_20`)
+## Repo Structure
+```
+ledbonsai.html   ← the application (always the current version)
+README.md        ← documentation (always current, displayed on GitHub)
+CLAUDE.md        ← this file
+.gitignore
+```
 
-**Always read both the latest `.html` and `.md` before making any changes.**
+**Always read both `ledbonsai.html` and `README.md` before making any changes.**
+
+There are no versioned files (e.g. `ledbonsai-v1_22.html`). Git history is the version history.
 
 ---
 
 ## Versioning Rules
 - **Every change — including minor bug fixes — gets a new version number**
-- Increment the minor version for all changes (e.g., `v1_20` → `v1_21`)
+- Increment the minor version for all changes (e.g., `1.22` → `1.23`)
 - Increment the major version only for significant structural rewrites
-- **Never overwrite a previous version file** — always create a new file
-- Add an entry to the version history table in the new `.md` file describing what changed
+- Update the `<title>` tag in `ledbonsai.html` to reflect the new version
+- Add an entry to the version history table in `README.md` describing what changed
 - Version history entries should be concise (one line), e.g.:
-  `| **1.21** | Fixed screensaver timer not resetting after manual generation |`
+  `| **1.23** | Fixed screensaver timer not resetting after manual generation |`
+- For milestone versions, create a git tag: `git tag v1.23 && git push --tags`
 
 ---
 
@@ -91,20 +96,20 @@ Files follow the pattern `ledbonsai-vMAJOR_MINOR.html` and `ledbonsai-vMAJOR_MIN
 3. Override `rootYOffset()` if the type needs extra vertical space
 4. Add one entry to the `TREE_CLASSES` array
 5. Add it to the **🎰 Randomize All** rotation if appropriate
-6. Document it in the `.md` under Tree Types
+6. Document it in `README.md` under Tree Types
 
 ### New Color Palette
 1. Add a new entry to the palettes definition with bark, leaf, and fruit colors
 2. Add it to the palette `<select>` in the HTML
 3. Include it in the **🎰 Randomize All** rotation
-4. Document it in the `.md` under Color Palettes
+4. Document it in `README.md` under Color Palettes
 
 ### New User Setting
 1. Add the HTML control in the sidebar
 2. Wire up the JS handler
 3. Add a URL parameter for it (read on load, write after generation)
 4. Include it in the pin save/restore logic if it should persist with pins
-5. Document it in the `.md` under Controls
+5. Document it in `README.md` under Controls
 
 ---
 
@@ -112,7 +117,7 @@ Files follow the pattern `ledbonsai-vMAJOR_MINOR.html` and `ledbonsai-vMAJOR_MIN
 - Do not use `Math.random()` in tree generation — use the seeded RNG
 - Do not introduce any external dependency, CDN link, or import
 - Do not split the code into multiple files
-- Do not overwrite or modify previous version files
+- Do not create versioned files (e.g. `ledbonsai-v1_23.html`) — edit `ledbonsai.html` directly
 - Do not add a new setting without also adding its URL parameter
 - Do not remove or rename existing URL parameters (breaks shared links)
 - Do not change the behavior of existing seeds without a clear reason — it breaks saved pins and shared URLs
@@ -120,7 +125,7 @@ Files follow the pattern `ledbonsai-vMAJOR_MINOR.html` and `ledbonsai-vMAJOR_MIN
 ---
 
 ## Testing
-Open the `.html` file directly in a browser (`File > Open` or drag onto browser). No build step needed.
+Open `ledbonsai.html` directly in a browser (`File > Open` or drag onto browser). No build step needed.
 
 Key things to verify after any change:
 - A tree generates on load without errors
@@ -133,14 +138,16 @@ Key things to verify after any change:
 ## Git & GitHub
 - Remote: https://github.com/ReeseLloyd/LEDBonsai.git
 - Branch: `main`
-- After completing changes, commit and push automatically:
+- After completing changes, commit and push:
   ```
-  git add <new files>
+  git add ledbonsai.html README.md
   git commit -m "v1.XX: short description of what changed"
   git push
   ```
-- Commit messages should describe the functional change, not the mechanism (e.g., "v1.21: Fix screensaver timer reset" not "v1.21: Set timerStart = null in resetTimer()")
-
-### README Sync
-- When a new `.md` documentation file is created at a milestone (as directed), copy it to `README.md` in the repo root so GitHub displays it.
-- Include `README.md` in the same commit as the versioned `.md` file.
+- Commit messages should describe the functional change, not the mechanism
+  (e.g., "v1.23: Fix screensaver timer reset" not "v1.23: Set timerStart = null in resetTimer()")
+- For milestone versions, also tag and push the tag:
+  ```
+  git tag v1.XX
+  git push --tags
+  ```

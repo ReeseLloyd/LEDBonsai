@@ -1,5 +1,5 @@
 # LEDBonsai — Documentation
-**Version 1.20**
+**Version 1.22**
 
 LEDBonsai is a single-file, self-contained HTML application that generates procedural bonsai trees rendered as glowing LED dot-matrix displays. Trees are deterministic — any tree can be exactly reproduced from its seed and settings. No server, no dependencies, no installation required.
 
@@ -7,7 +7,7 @@ LEDBonsai is a single-file, self-contained HTML application that generates proce
 
 ## Getting Started
 
-Open `ledbonsai-v1_20.html` in any modern web browser. A tree generates automatically on load. Click **Start** to make a new one, or **Randomize** (🎲) to shuffle the seed and generate, or **🎰** to randomize all settings (tree type, palette, structure sliders, and seed) before generating.
+Open `ledbonsai-v1_22.html` in any modern web browser. A tree generates automatically on load. Click **Start** to make a new one, or **Randomize** (🎲) to shuffle the seed and generate, or **🎰** to randomize all settings (tree type, palette, structure sliders, and seed) before generating.
 
 ---
 
@@ -260,6 +260,8 @@ The **⏸** button lets you freeze on a tree you like without leaving focus mode
 
 | Version | Changes |
 |---|---|
+| **1.22** | Added per-seed horizontal mirror flip so ~50% of seeds grow leftward, eliminating the consistent rightward bias; derived from seed hash so flip is deterministic without consuming RNG calls |
+| **1.21** | Replaced favicon: glowing orb swapped for autumn-palette three-pad bonsai (red/orange/gold foliage, dark trunk, pot) |
 | **1.20** | Changed default canvas background from Dark grey to Black |
 | **1.19** | Fixed unlit panel dots (UNLIT_DOT was a space, UNLIT_COLOR was transparent — both now correctly set to `·` and `#2a2a2a`); unlit panel defaults to off; added Canvas Background selector (Dark grey, Black, White, Old parchment); background persists in share/pin URLs via `canbg` param |
 | **1.18** | Added pause/resume functionality; comprehensive pin system improvements |
