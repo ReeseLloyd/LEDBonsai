@@ -140,3 +140,7 @@ Key things to verify after any change:
   git push
   ```
 - Commit messages should describe the functional change, not the mechanism (e.g., "v1.21: Fix screensaver timer reset" not "v1.21: Set timerStart = null in resetTimer()")
+
+### README Sync
+- When a new `.md` documentation file is created at a milestone (as directed), copy it to `README.md` in the repo root so GitHub displays it.
+- Include `README.md` in the same commit as the versioned `.md` file.
