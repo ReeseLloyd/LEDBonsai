@@ -260,6 +260,7 @@ The **⏸** button lets you freeze on a tree you like without leaving focus mode
 
 | Version | Changes |
 |---|---|
+| **1.23** | Brightened branch and bark mark colors on Bioluminescent, Midnight, and Ember palettes for better visibility in bright environments |
 | **1.22** | Added per-seed horizontal mirror flip so ~50% of seeds grow leftward, eliminating the consistent rightward bias; derived from seed hash so flip is deterministic without consuming RNG calls |
 | **1.21** | Replaced favicon: glowing orb swapped for autumn-palette three-pad bonsai (red/orange/gold foliage, dark trunk, pot) |
 | **1.20** | Changed default canvas background from Dark grey to Black |
