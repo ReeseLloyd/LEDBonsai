@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEDBonsai v1.23</title>
+    <title>LEDBonsai v1.24</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMTExMTE0Ii8+PHJlY3QgeD0iMTAiIHk9IjI2IiB3aWR0aD0iMTIiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiMzYTNhNGUiLz48cmVjdCB4PSIxMSIgeT0iMjgiIHdpZHRoPSIxMCIgaGVpZ2h0PSIzIiByeD0iMSIgZmlsbD0iIzJlMmUzZSIvPjxyZWN0IHg9IjE1IiB5PSIxOCIgd2lkdGg9IjIiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiMzZDFlMDgiLz48bGluZSB4MT0iMTUuNSIgeTE9IjIzIiB4Mj0iNyIgeTI9IjE2IiBzdHJva2U9IiMzZDFlMDgiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMTYuNSIgeTE9IjIyIiB4Mj0iMjUiIHkyPSIxNSIgc3Ryb2tlPSIjM2QxZTA4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjEzIiByPSI1LjUiIGZpbGw9IiNjYzIyMDAiLz48Y2lyY2xlIGN4PSIyNSIgY3k9IjEyIiByPSI1IiBmaWxsPSIjZGQ1NTAwIi8+PGNpcmNsZSBjeD0iMTUiIGN5PSI4IiByPSI2LjUiIGZpbGw9IiNmZmFhMDAiLz48L3N2Zz4=">
     <style>
         * {
@@ -1169,7 +1169,11 @@
                 <button id="generate-btn">Start</button>
                 <button id="stop-btn" class="btn-secondary" disabled>Stop</button>
                 <button id="randomize-all-btn" class="btn-icon btn-secondary" title="Randomize tree type, palette &amp; structure">🎰</button>
+                <button id="discover-btn" class="btn-icon btn-secondary" title="Scan seeds and show the most interesting tree">🔭</button>
                 <button id="defaults-btn" class="btn-icon btn-secondary" title="Restore defaults">↺</button>
+            </div>
+            <div id="discover-status" style="display:none;font-size:0.72rem;color:#555;margin-top:4px;padding:0 2px;">
+                <span id="discover-status-text"></span>
             </div>
 
             <hr class="separator">
@@ -1347,6 +1351,18 @@
                 <span id="screensaver-countdown">Auto-advancing…</span>
             </div>
 
+            <div class="control-group checkbox-group" id="discover-mode-group" style="display:none">
+                <input type="checkbox" id="discover-mode">
+                <label for="discover-mode">Discover mode</label>
+            </div>
+            <div class="control-group" id="discover-batch-group" style="display:none">
+                <div class="control-row">
+                    <label for="discover-batch">Candidates</label>
+                    <span class="value" id="discover-batch-val">20</span>
+                </div>
+                <input type="range" id="discover-batch" min="5" max="50" step="5" value="20">
+            </div>
+
             <hr class="separator">
             <div class="section-title">Share</div>
 
@@ -1373,7 +1389,7 @@
                 Inspired by <a href="https://github.com/Ben-Edwards44/PyBonsai" target="_blank" rel="noopener">PyBonsai</a>
                 &amp; <a href="#" target="_blank" rel="noopener">JSBonsai</a>
             </div>
-            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.23</div>
+            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.24</div>
         </aside>
 
         <main class="display-area bg-black">
@@ -2112,6 +2128,38 @@
                 }
             }
         };
+
+        // ============================================
+        // Seed Discovery Scoring
+        // Scores a generated grid 0–1 on complexity, proportions, spread, and density.
+        // Higher = more visually interesting. Used by discoverTree() to pick the best
+        // candidate from a batch of randomly-generated trees.
+        // ============================================
+        function scoreGrid(grid) {
+            if (!grid || grid.cells.size === 0) return 0;
+            const w    = grid.maxX - grid.minX + 1;
+            const h    = grid.maxY - grid.minY + 1;
+            const dots = grid.cells.size;
+            const area = w * h;
+            if (w < 5 || h < 5 || area <= 0) return 0;
+
+            // Complexity: reward 300–1200 lit cells, penalise outliers
+            const complexityScore = Math.min(1.0, dots / 500) *
+                                    Math.max(0, 1 - Math.max(0, dots - 1200) / 1500);
+
+            // Aspect ratio (width / height): sweet spot ~0.85, penalise extremes
+            const ar = w / h;
+            const arScore = Math.max(0, 1 - Math.abs(Math.log(Math.max(0.01, ar) / 0.85)));
+
+            // Width spread: trees wider than 55 columns score well
+            const spreadScore = Math.min(1.0, w / 55);
+
+            // Density: lit cells / bounding-box area, sweet spot ~0.15
+            const density = dots / area;
+            const densityScore = Math.max(0, 1 - Math.abs(Math.log(Math.max(0.01, density) / 0.15)));
+
+            return complexityScore * 0.35 + arScore * 0.25 + spreadScore * 0.25 + densityScore * 0.15;
+        }
 
         // ============================================
         // Base Tree Class
@@ -3632,7 +3680,13 @@
                 this.screensaverTimer = setTimeout(async () => {
                     if (!document.getElementById('screensaver').checked) return;
                     this.stopFocusProgress();
-                    this.randomizeAll();
+                    if (document.getElementById('discover-mode').checked) {
+                        document.getElementById('screensaver-countdown').textContent = 'Scanning…';
+                        const best = await this.discoverTree(null);
+                        if (best) this.applyOptions(best);
+                    } else {
+                        this.randomizeAll();
+                    }
                     await this.generate();
                     if (document.getElementById('screensaver').checked) {
                         this.scheduleNextTree();
@@ -3645,7 +3699,12 @@
             async skipToNextTree() {
                 const screensaverWasActive = document.getElementById('screensaver').checked;
                 this.stopFocusProgress();
-                this.randomizeAll();
+                if (document.getElementById('discover-mode').checked) {
+                    const best = await this.discoverTree(null);
+                    if (best) this.applyOptions(best);
+                } else {
+                    this.randomizeAll();
+                }
                 await this.generate();
                 if (screensaverWasActive) {
                     this.scheduleNextTree();
@@ -3674,7 +3733,13 @@
                 this.screensaverTimer = setTimeout(async () => {
                     if (!document.getElementById('screensaver').checked) return;
                     this.stopFocusProgress();
-                    this.randomizeAll();
+                    if (document.getElementById('discover-mode').checked) {
+                        document.getElementById('screensaver-countdown').textContent = 'Scanning…';
+                        const best = await this.discoverTree(null);
+                        if (best) this.applyOptions(best);
+                    } else {
+                        this.randomizeAll();
+                    }
                     await this.generate();
                     if (document.getElementById('screensaver').checked) {
                         this.scheduleNextTree();
@@ -3689,7 +3754,7 @@
                 // Require at least one known param to treat this as a URL load
                 const knownParams = ['seed','type','layers','len','angle','leaf','palette',
                                      'potcolor','potsize','glow','fruit','unlit','canbg',
-                                     'screensaver','ssinterval','focus'];
+                                     'screensaver','ssinterval','focus','discover','discoverbatch'];
                 if (!knownParams.some(k => params.has(k))) return false;
 
                 const paramMap = {
@@ -3762,6 +3827,20 @@
                     document.getElementById('screensaver-interval-group').style.display = '';
                 }
 
+                // Restore discover mode state
+                if (params.get('screensaver') === '1') {
+                    document.getElementById('discover-mode-group').style.display = '';
+                }
+                if (params.get('discover') === '1') {
+                    document.getElementById('discover-mode').checked = true;
+                    document.getElementById('discover-batch-group').style.display = '';
+                }
+                if (params.has('discoverbatch')) {
+                    const batchEl = document.getElementById('discover-batch');
+                    batchEl.value = params.get('discoverbatch');
+                    document.getElementById('discover-batch-val').textContent = batchEl.value;
+                }
+
                 // Focus mode is applied after generate() completes so the tree exists to fit
                 this.pendingFocusMode = params.get('focus') === '1';
 
@@ -3792,6 +3871,11 @@
                     params.set('ssinterval', document.getElementById('screensaver-interval').value);
                 }
                 params.set('focus',      document.body.classList.contains('focus-mode') ? '1' : '0');
+                const discoverChecked = document.getElementById('discover-mode').checked;
+                params.set('discover', discoverChecked ? '1' : '0');
+                if (discoverChecked) {
+                    params.set('discoverbatch', document.getElementById('discover-batch').value);
+                }
                 return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
             }
 
@@ -4033,6 +4117,34 @@
                     this.generate();
                 });
 
+                // Discover button: scan batchSize seeds, show the highest-scoring tree
+                document.getElementById('discover-btn').addEventListener('click', async () => {
+                    const btn       = document.getElementById('discover-btn');
+                    const statusDiv = document.getElementById('discover-status');
+                    const statusEl  = document.getElementById('discover-status-text');
+                    btn.disabled           = true;
+                    statusDiv.style.display = '';
+                    const best = await this.discoverTree(statusEl);
+                    statusDiv.style.display = 'none';
+                    btn.disabled = false;
+                    if (best) {
+                        this.applyOptions(best);
+                        await this.generate();
+                    }
+                });
+
+                // Discover mode checkbox: show/hide batch slider
+                document.getElementById('discover-mode').addEventListener('change', e => {
+                    document.getElementById('discover-batch-group').style.display =
+                        e.target.checked ? '' : 'none';
+                });
+
+                // Discover batch slider value display
+                document.getElementById('discover-batch').addEventListener('input', () => {
+                    document.getElementById('discover-batch-val').textContent =
+                        document.getElementById('discover-batch').value;
+                });
+
                 // Defaults: restore fixed defaults and regenerate
                 document.getElementById('defaults-btn').addEventListener('click', () => {
                     this.applyDefaults();
@@ -4072,6 +4184,11 @@
                 document.getElementById('screensaver').addEventListener('change', (e) => {
                     const on = e.target.checked;
                     document.getElementById('screensaver-interval-group').style.display = on ? '' : 'none';
+                    document.getElementById('discover-mode-group').style.display = on ? '' : 'none';
+                    if (!on) {
+                        document.getElementById('discover-mode').checked = false;
+                        document.getElementById('discover-batch-group').style.display = 'none';
+                    }
                     if (on) {
                         this.startScreesaver();
                     } else {
@@ -4181,6 +4298,78 @@
                 setSlider('start-len', randInt(8, 25));
                 setSlider('angle',     randInt(20, 65));
                 setSlider('leaf-len',  randInt(2, 8));
+            }
+
+            // Apply a full options object back to the DOM controls (used by discoverTree).
+            applyOptions(options) {
+                const setSlider = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.value = val;
+                    const span = document.getElementById(`${id}-val`);
+                    if (span) span.textContent = (id === 'angle') ? `${val}°` : val;
+                };
+                document.getElementById('seed').value      = options.seed;
+                document.getElementById('tree-type').value = options.treeType;
+                setSlider('layers',    options.layers);
+                setSlider('start-len', options.startLen);
+                setSlider('angle',     Math.round(options.angleMean * 180 / Math.PI));
+                setSlider('leaf-len',  options.leafLen);
+                setSlider('pot-size',  options.potSize);
+                this.setPalette(options.palette);
+                if (options.palette === 'monochrome') {
+                    document.getElementById('mono-color').value = options.monoColor;
+                    this.syncMonoPreset(options.monoColor);
+                }
+                this.updateMonoVisibility();
+                document.getElementById('pot-color').value = options.potColor;
+            }
+
+            // Silently generate `batchSize` random trees, score each with scoreGrid(),
+            // and return the options object for the highest-scoring candidate.
+            // Yields to the browser between each candidate so the UI stays responsive.
+            // Pass a DOM element as `statusEl` to receive "Scanning… N/total" updates.
+            async discoverTree(statusEl) {
+                const batchSize = parseInt(document.getElementById('discover-batch').value) || 20;
+                const TREE_CLASSES = [ClassicTree, FibonacciTree, OffsetFibTree,
+                                      RandomOffsetFibTree, LiteratiTree, CascadeTree];
+                let bestScore   = -1;
+                let bestOptions = null;
+
+                for (let i = 0; i < batchSize; i++) {
+                    if (statusEl) statusEl.textContent = `Scanning… ${i + 1} / ${batchSize}`;
+
+                    this.randomizeAll();
+                    const options = { ...this.getOptions(), instant: true };
+
+                    // Memory safety clamp
+                    options.layers = safeLayerCount(options).layers;
+
+                    // Resolve random pot color without touching the main RNG sequence
+                    if (options.potColor === 'random') {
+                        const keys = Object.keys(Tree.POT_COLORS);
+                        options.potColor = keys[Math.floor(Math.random() * keys.length)];
+                    }
+
+                    // Silent instant-mode generation into a throwaway grid
+                    const rng       = new SeededRandom(options.seed);
+                    const grid      = new Grid();
+                    const TreeClass = TREE_CLASSES[options.treeType] || ClassicTree;
+                    let rootY       = Tree.BOX_HEIGHT + 4 + TreeClass.rootYOffset(options);
+                    if (rootY % 2 !== 0) rootY++;
+                    new TreeClass(grid, 0, rootY, options, rng, new AnimationQueue()).draw();
+
+                    const score = scoreGrid(grid);
+                    if (score > bestScore) {
+                        bestScore   = score;
+                        bestOptions = options;
+                    }
+
+                    // Yield to browser so UI stays responsive during scan
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+
+                return bestOptions;
             }
 
             applyDefaults() {
