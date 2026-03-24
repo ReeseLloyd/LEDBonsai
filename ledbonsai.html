@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEDBonsai v1.25</title>
+    <title>LEDBonsai v1.26</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMTExMTE0Ii8+PHJlY3QgeD0iMTAiIHk9IjI2IiB3aWR0aD0iMTIiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiMzYTNhNGUiLz48cmVjdCB4PSIxMSIgeT0iMjgiIHdpZHRoPSIxMCIgaGVpZ2h0PSIzIiByeD0iMSIgZmlsbD0iIzJlMmUzZSIvPjxyZWN0IHg9IjE1IiB5PSIxOCIgd2lkdGg9IjIiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiMzZDFlMDgiLz48bGluZSB4MT0iMTUuNSIgeTE9IjIzIiB4Mj0iNyIgeTI9IjE2IiBzdHJva2U9IiMzZDFlMDgiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMTYuNSIgeTE9IjIyIiB4Mj0iMjUiIHkyPSIxNSIgc3Ryb2tlPSIjM2QxZTA4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjEzIiByPSI1LjUiIGZpbGw9IiNjYzIyMDAiLz48Y2lyY2xlIGN4PSIyNSIgY3k9IjEyIiByPSI1IiBmaWxsPSIjZGQ1NTAwIi8+PGNpcmNsZSBjeD0iMTUiIGN5PSI4IiByPSI2LjUiIGZpbGw9IiNmZmFhMDAiLz48L3N2Zz4=">
     <style>
         * {
@@ -1389,7 +1389,7 @@
                 Inspired by <a href="https://github.com/Ben-Edwards44/PyBonsai" target="_blank" rel="noopener">PyBonsai</a>
                 &amp; <a href="#" target="_blank" rel="noopener">JSBonsai</a>
             </div>
-            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.25</div>
+            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.26</div>
         </aside>
 
         <main class="display-area bg-black">
@@ -4107,6 +4107,16 @@
                             document.body.classList.contains('focus-mode')) {
                             e.preventDefault();
                             this.skipToNextTree();
+                        }
+                    }
+                    // D in focus mode: run seed discovery
+                    if (e.key === 'd' || e.key === 'D') {
+                        if (!e.ctrlKey && !e.metaKey &&
+                            document.activeElement.tagName !== 'INPUT' &&
+                            document.activeElement.tagName !== 'TEXTAREA' &&
+                            document.body.classList.contains('focus-mode')) {
+                            e.preventDefault();
+                            document.getElementById('discover-btn').click();
                         }
                     }
                 });
