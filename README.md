@@ -260,6 +260,7 @@ The **⏸** button lets you freeze on a tree you like without leaving focus mode
 
 | Version | Changes |
 |---|---|
+| **1.25** | Fix discover mode: layer count now clamped consistently with generate() so the rendered tree matches what was scored; raise scoring thresholds to prefer fuller trees (complexity upper bound 1200→2500, density sweet spot 0.15→0.22) |
 | **1.24** | Added seed discovery mode: 🔭 button scans a batch of random trees and surfaces the highest-scoring one; integrates with screensaver via "Discover mode" checkbox; exposed via `discover` and `discoverbatch` URL params |
 | **1.23** | Brightened branch and bark mark colors on Bioluminescent, Midnight, and Ember palettes for better visibility in bright environments |
 | **1.22** | Added per-seed horizontal mirror flip so ~50% of seeds grow leftward, eliminating the consistent rightward bias; derived from seed hash so flip is deterministic without consuming RNG calls |
