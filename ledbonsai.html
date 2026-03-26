@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEDBonsai v1.26</title>
+    <title>LEDBonsai v1.27</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMTExMTE0Ii8+PHJlY3QgeD0iMTAiIHk9IjI2IiB3aWR0aD0iMTIiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiMzYTNhNGUiLz48cmVjdCB4PSIxMSIgeT0iMjgiIHdpZHRoPSIxMCIgaGVpZ2h0PSIzIiByeD0iMSIgZmlsbD0iIzJlMmUzZSIvPjxyZWN0IHg9IjE1IiB5PSIxOCIgd2lkdGg9IjIiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiMzZDFlMDgiLz48bGluZSB4MT0iMTUuNSIgeTE9IjIzIiB4Mj0iNyIgeTI9IjE2IiBzdHJva2U9IiMzZDFlMDgiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMTYuNSIgeTE9IjIyIiB4Mj0iMjUiIHkyPSIxNSIgc3Ryb2tlPSIjM2QxZTA4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjEzIiByPSI1LjUiIGZpbGw9IiNjYzIyMDAiLz48Y2lyY2xlIGN4PSIyNSIgY3k9IjEyIiByPSI1IiBmaWxsPSIjZGQ1NTAwIi8+PGNpcmNsZSBjeD0iMTUiIGN5PSI4IiByPSI2LjUiIGZpbGw9IiNmZmFhMDAiLz48L3N2Zz4=">
     <style>
         * {
@@ -1110,6 +1110,24 @@
             background: rgba(30, 25, 0, 0.8);
             box-shadow: 0 0 12px rgba(255,215,0,0.5);
         }
+
+        /* Focus mode control auto-hide — fade out after inactivity */
+        body.focus-mode .focus-btn,
+        body.focus-mode .pause-btn,
+        body.focus-mode .pin-focus-btn,
+        body.focus-mode .fullscreen-btn,
+        body.focus-mode .skip-btn {
+            transition: color 0.2s, border-color 0.2s, background 0.2s, box-shadow 0.2s,
+                        opacity 0.5s ease;
+        }
+        body.focus-mode.focus-idle .focus-btn,
+        body.focus-mode.focus-idle .pause-btn,
+        body.focus-mode.focus-idle .pin-focus-btn,
+        body.focus-mode.focus-idle .fullscreen-btn,
+        body.focus-mode.focus-idle .skip-btn {
+            opacity: 0;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -1389,7 +1407,7 @@
                 Inspired by <a href="https://github.com/Ben-Edwards44/PyBonsai" target="_blank" rel="noopener">PyBonsai</a>
                 &amp; <a href="#" target="_blank" rel="noopener">JSBonsai</a>
             </div>
-            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.26</div>
+            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.27</div>
         </aside>
 
         <main class="display-area bg-black">
@@ -3282,6 +3300,10 @@
                 // Set by loadFromUrl when focus=1 is in the URL; consumed after first generate()
                 this.pendingFocusMode = false;
 
+                // Focus mode idle-hide state
+                this.focusIdleTimer = null;
+                this.hideCtrl       = false;
+
                 this.buildPalettePicker();
                 this.bindControls();
                 this.bindEvents();
@@ -3754,7 +3776,8 @@
                 // Require at least one known param to treat this as a URL load
                 const knownParams = ['seed','type','layers','len','angle','leaf','palette',
                                      'potcolor','potsize','glow','fruit','unlit','canbg',
-                                     'screensaver','ssinterval','focus','discover','discoverbatch'];
+                                     'screensaver','ssinterval','focus','discover','discoverbatch',
+                                     'hidectrl'];
                 if (!knownParams.some(k => params.has(k))) return false;
 
                 const paramMap = {
@@ -3841,6 +3864,11 @@
                     document.getElementById('discover-batch-val').textContent = batchEl.value;
                 }
 
+                // Kiosk mode: permanently hide focus controls (no mouse to reveal them)
+                if (params.get('hidectrl') === '1') {
+                    this.hideCtrl = true;
+                }
+
                 // Focus mode is applied after generate() completes so the tree exists to fit
                 this.pendingFocusMode = params.get('focus') === '1';
 
@@ -3871,6 +3899,7 @@
                     params.set('ssinterval', document.getElementById('screensaver-interval').value);
                 }
                 params.set('focus',      document.body.classList.contains('focus-mode') ? '1' : '0');
+                params.set('hidectrl',   this.hideCtrl ? '1' : '0');
                 const discoverChecked = document.getElementById('discover-mode').checked;
                 params.set('discover', discoverChecked ? '1' : '0');
                 if (discoverChecked) {
@@ -3887,6 +3916,36 @@
 
             // In focus mode: scale the tree to fill the viewport with a small margin,
             // centering it both horizontally and vertically.
+            // Focus-mode idle hide: fade controls out after 3s of no mouse movement.
+            // With hidectrl=1, controls are always hidden (no mouse can reveal them).
+            startFocusIdleTimer() {
+                this.clearFocusIdleTimer();
+                if (this.hideCtrl) {
+                    document.body.classList.add('focus-idle');
+                    return;
+                }
+                this.focusIdleTimer = setTimeout(() => {
+                    if (document.body.classList.contains('focus-mode')) {
+                        document.body.classList.add('focus-idle');
+                    }
+                }, 3000);
+            }
+
+            clearFocusIdleTimer() {
+                if (this.focusIdleTimer) {
+                    clearTimeout(this.focusIdleTimer);
+                    this.focusIdleTimer = null;
+                }
+                document.body.classList.remove('focus-idle');
+            }
+
+            resetFocusIdleTimer() {
+                if (!document.body.classList.contains('focus-mode')) return;
+                if (this.hideCtrl) return;
+                this.clearFocusIdleTimer();
+                this.startFocusIdleTimer();
+            }
+
             fitToViewport() {
                 if (!document.body.classList.contains('focus-mode')) return;
 
@@ -3976,7 +4035,9 @@
                         // Defer one frame so CSS reflow (hiding header/sidebar) completes
                         // before we measure the available canvas area.
                         requestAnimationFrame(() => this.fitToViewport());
+                        this.startFocusIdleTimer();
                     } else {
+                        this.clearFocusIdleTimer();
                         this.display.style.transform = `scale(${this.zoomLevel / 100})`;
                     }
                 });
@@ -4073,6 +4134,8 @@
                 // Re-fit on window resize while in focus mode
                 window.addEventListener('resize', () => this.fitToViewport());
 
+                document.addEventListener('mousemove', () => this.resetFocusIdleTimer());
+
                 document.querySelector('.canvas-container').addEventListener('wheel', (e) => {
                     if (e.ctrlKey || e.metaKey) {
                         e.preventDefault();
@@ -4085,6 +4148,7 @@
                         document.body.classList.remove('focus-mode');
                         this.focusBtn.title = 'Focus mode (hide controls)';
                         this.display.style.transform = `scale(${this.zoomLevel / 100})`;
+                        this.clearFocusIdleTimer();
                     }
                     // Space in focus mode toggles pause; otherwise generates (when not in an input)
                     if ((e.key === ' ' || e.key === 'Enter') && !e.ctrlKey && !e.metaKey) {
@@ -4928,6 +4992,7 @@
                     document.body.classList.add('focus-mode');
                     this.focusBtn.title = 'Exit focus mode';
                     requestAnimationFrame(() => this.fitToViewport());
+                    this.startFocusIdleTimer();
                 }
             }
         }
