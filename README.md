@@ -1,5 +1,5 @@
 # LEDBonsai — Documentation
-**Version 1.22**
+**Version 1.29**
 
 LEDBonsai is a single-file, self-contained HTML application that generates procedural bonsai trees rendered as glowing LED dot-matrix displays. Trees are deterministic — any tree can be exactly reproduced from its seed and settings. No server, no dependencies, no installation required.
 
@@ -7,7 +7,14 @@ LEDBonsai is a single-file, self-contained HTML application that generates proce
 
 ## Getting Started
 
-Open `ledbonsai-v1_22.html` in any modern web browser. A tree generates automatically on load. Click **Start** to make a new one, or **Randomize** (🎲) to shuffle the seed and generate, or **🎰** to randomize all settings (tree type, palette, structure sliders, and seed) before generating.
+Open `ledbonsai.html` in any modern web browser. A tree generates automatically on load. The button row offers:
+
+- **Start** — generate a tree with the current settings.
+- **Stop** — halt an in-progress animation.
+- **🎲** (next to the seed field) — shuffle the seed and generate.
+- **🎰** — randomize all settings (tree type, palette, structure sliders, and seed) before generating.
+- **🔭** — seed discovery: scan a batch of random trees and show the highest-scoring one (see [Seed Discovery](#seed-discovery)).
+- **↺** — restore the default settings.
 
 ---
 
@@ -55,6 +62,16 @@ When enabled, LEDBonsai automatically generates a new random tree at a set inter
 |---|---|---|---|
 | **Auto-advance** | On/Off | Off | Enables screensaver mode. |
 | **Interval** | 5 – 300 s | 60 s | Time in seconds between each new tree. |
+
+### Seed Discovery
+
+Seed discovery silently generates a batch of random trees, scores each one for visual interest (complexity, proportions, spread, and density), and surfaces the highest-scoring candidate.
+
+| Control | Range | Default | Description |
+|---|---|---|---|
+| **🔭 button** | — | — | Scan a batch immediately and display the best tree found. Also bound to the **D** key in focus mode. |
+| **Discover mode** | On/Off | Off | When auto-advance is on, each interval shows a freshly discovered best tree instead of a purely random one. Only visible while auto-advance is enabled. |
+| **Candidates** | 5 – 50 | 20 | Number of trees scanned per discovery pass. Higher values search harder but take longer. |
 
 ---
 
@@ -129,9 +146,13 @@ Click the 📋 button to copy the URL to the clipboard.
 | `glow` | Glow on/off (`1`/`0`) |
 | `fruit` | Fruit on/off (`1`/`0`) |
 | `unlit` | Unlit panel on/off (`1`/`0`) |
+| `canbg` | Canvas background (`dark-grey`, `black`, `white`, `parchment`) |
 | `screensaver` | Auto-advance on/off (`1`/`0`) |
 | `ssinterval` | Screensaver interval in seconds |
 | `focus` | Focus mode on/off (`1`/`0`) |
+| `discover` | Discover mode on/off (`1`/`0`) |
+| `discoverbatch` | Number of candidates scanned per discovery pass |
+| `hidectrl` | Permanently hide focus-mode controls for kiosk use (`1`/`0`) |
 
 ---
 
@@ -164,6 +185,8 @@ Focus mode hides the control sidebar and header, filling the entire screen with 
   - **⛶** — enter/exit fullscreen (see below)
 
 Focus mode also activates the **screensaver progress bar** — a thin glowing line along the bottom of the screen that depletes over the interval duration, showing time remaining until the next tree.
+
+The focus-mode buttons fade out automatically after 3 seconds without mouse movement and reappear on the next move, keeping the display uncluttered. For a permanent kiosk where there is no mouse to reveal them, add `hidectrl=1` to the URL to keep the controls hidden at all times.
 
 ---
 
@@ -212,6 +235,7 @@ Click **Export…** to save the current tree as a file.
 | **Space** | Generate new tree (normal mode) · Toggle pause (focus mode) |
 | **Enter** | Generate new tree (when not in a text input) |
 | **N** | Skip to next tree — randomize and generate immediately (focus mode only) |
+| **D** | Run seed discovery (focus mode only) |
 | **Escape** | Exit focus mode |
 | **Ctrl/Cmd + scroll** | Zoom in/out |
 
@@ -245,10 +269,10 @@ LEDBonsai is designed to work well as an always-on ambient display.
 **Recommended setup:**
 1. Open the file in the browser.
 2. Enable **Auto-advance** and set your preferred interval.
-3. Enter **Focus mode** (⛶).
-4. On Raspberry Pi, launch Chromium in kiosk mode to hide the browser UI:
+3. Enter **Focus mode** (**⊡**, top-right corner).
+4. On Raspberry Pi, launch Chromium in kiosk mode to hide the browser UI. The URL parameters below enable focus mode and auto-advance and permanently hide the on-screen controls, so steps 2–3 happen automatically:
    ```
-   chromium-browser --kiosk file:///path/to/ledbonsai-v1_17.html
+   chromium-browser --kiosk "file:///path/to/ledbonsai.html?focus=1&screensaver=1&hidectrl=1"
    ```
 5. On iPad, add to Home Screen for full-screen display and persistent pin storage.
 
@@ -260,6 +284,7 @@ The **⏸** button lets you freeze on a tree you like without leaving focus mode
 
 | Version | Changes |
 |---|---|
+| **1.29** | Documentation: synced README and CLAUDE.md to current code — `ledbonsai.html` filename, full URL-parameter list, Seed Discovery section, focus-mode auto-hide and `hidectrl` kiosk note, and the `D` keyboard shortcut |
 | **1.28** | Fixed malformed Wisteria palette swatch color; pin labels now name Literati and Cascade trees; removed dead JSBonsai credit link |
 | **1.27** | Focus mode controls auto-hide after 3s inactivity; `hidectrl=1` URL param for permanent kiosk hide |
 | **1.26** | Add `D` hotkey in focus mode to trigger seed discovery |

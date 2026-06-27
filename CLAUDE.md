@@ -66,7 +66,7 @@ There are no versioned files (e.g. `ledbonsai-v1_22.html`). Git history is the v
 ### URL Parameter System
 - After generation, all current settings are encoded as URL query parameters for sharing.
 - **Every new user-facing setting must also be added as a URL parameter** so shared links remain complete.
-- Existing parameters: `seed`, `type`, `layers`, `len`, `angle`, `leaf`, `palette`, `mono`, `potcolor`, `potsize`, `glow`, `fruit`, `unlit`, `screensaver`, `ssinterval`, `focus`, `canbg`.
+- Existing parameters: `seed`, `type`, `layers`, `len`, `angle`, `leaf`, `palette`, `mono`, `potcolor`, `potsize`, `glow`, `fruit`, `unlit`, `canbg`, `screensaver`, `ssinterval`, `focus`, `discover`, `discoverbatch`, `hidectrl`.
 
 ### Pin System
 - Pins are saved to `localStorage` under the key `ledbonsai_pins`, capped at 50 entries.
