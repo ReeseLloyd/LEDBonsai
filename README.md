@@ -260,6 +260,7 @@ The **⏸** button lets you freeze on a tree you like without leaving focus mode
 
 | Version | Changes |
 |---|---|
+| **1.28** | Fixed malformed Wisteria palette swatch color; pin labels now name Literati and Cascade trees; removed dead JSBonsai credit link |
 | **1.27** | Focus mode controls auto-hide after 3s inactivity; `hidectrl=1` URL param for permanent kiosk hide |
 | **1.26** | Add `D` hotkey in focus mode to trigger seed discovery |
 | **1.25** | Fix discover mode: layer count now clamped consistently with generate() so the rendered tree matches what was scored; raise scoring thresholds to prefer fuller trees (complexity upper bound 1200→2500, density sweet spot 0.15→0.22) |

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEDBonsai v1.27</title>
+    <title>LEDBonsai v1.28</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMTExMTE0Ii8+PHJlY3QgeD0iMTAiIHk9IjI2IiB3aWR0aD0iMTIiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiMzYTNhNGUiLz48cmVjdCB4PSIxMSIgeT0iMjgiIHdpZHRoPSIxMCIgaGVpZ2h0PSIzIiByeD0iMSIgZmlsbD0iIzJlMmUzZSIvPjxyZWN0IHg9IjE1IiB5PSIxOCIgd2lkdGg9IjIiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiMzZDFlMDgiLz48bGluZSB4MT0iMTUuNSIgeTE9IjIzIiB4Mj0iNyIgeTI9IjE2IiBzdHJva2U9IiMzZDFlMDgiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMTYuNSIgeTE9IjIyIiB4Mj0iMjUiIHkyPSIxNSIgc3Ryb2tlPSIjM2QxZTA4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjEzIiByPSI1LjUiIGZpbGw9IiNjYzIyMDAiLz48Y2lyY2xlIGN4PSIyNSIgY3k9IjEyIiByPSI1IiBmaWxsPSIjZGQ1NTAwIi8+PGNpcmNsZSBjeD0iMTUiIGN5PSI4IiByPSI2LjUiIGZpbGw9IiNmZmFhMDAiLz48L3N2Zz4=">
     <style>
         * {
@@ -1405,9 +1405,9 @@
 
             <div class="credit">
                 Inspired by <a href="https://github.com/Ben-Edwards44/PyBonsai" target="_blank" rel="noopener">PyBonsai</a>
-                &amp; <a href="#" target="_blank" rel="noopener">JSBonsai</a>
+                &amp; JSBonsai
             </div>
-            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.27</div>
+            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.28</div>
         </aside>
 
         <main class="display-area bg-black">
@@ -3326,7 +3326,7 @@
                 winter:         ['rgb(95,70,60)',   'rgb(50,105,65)',  'rgb(80,130,85)',  'rgb(220,235,247)'],
                 birch:          ['rgb(235,230,215)','rgb(75,165,70)',  'rgb(115,185,80)', 'rgb(95,172,75)'  ],
                 jacaranda:      ['rgb(117,100,95)', 'rgb(160,125,200)','rgb(180,145,220)','rgb(90,140,80)'  ],
-                wisteria:       ['rgb(127,110,100)','rgb(95,152,82)',  'rgb(180,162,222)','rgb(200,182,237]'],
+                wisteria:       ['rgb(127,110,100)','rgb(95,152,82)',  'rgb(180,162,222)','rgb(200,182,237)'],
                 winterbare:     ['rgb(110,70,60)',  'rgb(110,70,60)',  'rgb(120,78,65)',  'rgb(130,85,68)'  ],
                 sakuranight:    ['rgb(67,50,60)',   'rgb(217,80,132)', 'rgb(240,102,155)','rgb(255,190,217)'],
                 bioluminescent: ['rgb(15,40,55)',   'rgb(0,165,185)',  'rgb(20,220,240)', 'rgb(80,245,255)' ],
@@ -3474,7 +3474,7 @@
                 // Build a friendly label from current palette + tree type
                 const paletteKey  = document.getElementById('color-palette').value;
                 const treeTypeVal = parseInt(document.getElementById('tree-type').value);
-                const treeNames   = ['Classic', 'Fibonacci', 'Offset Fib', 'Random Fib'];
+                const treeNames   = ['Classic', 'Fibonacci', 'Offset Fib', 'Random Fib', 'Literati', 'Cascade'];
                 const paletteName = (COLOR_PALETTES[paletteKey] && COLOR_PALETTES[paletteKey].name)
                     ? COLOR_PALETTES[paletteKey].name
                     : paletteKey.charAt(0).toUpperCase() + paletteKey.slice(1);
