@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEDBonsai v1.32</title>
+    <title>LEDBonsai v1.33</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMTExMTE0Ii8+PHJlY3QgeD0iMTAiIHk9IjI2IiB3aWR0aD0iMTIiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiMzYTNhNGUiLz48cmVjdCB4PSIxMSIgeT0iMjgiIHdpZHRoPSIxMCIgaGVpZ2h0PSIzIiByeD0iMSIgZmlsbD0iIzJlMmUzZSIvPjxyZWN0IHg9IjE1IiB5PSIxOCIgd2lkdGg9IjIiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiMzZDFlMDgiLz48bGluZSB4MT0iMTUuNSIgeTE9IjIzIiB4Mj0iNyIgeTI9IjE2IiBzdHJva2U9IiMzZDFlMDgiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMTYuNSIgeTE9IjIyIiB4Mj0iMjUiIHkyPSIxNSIgc3Ryb2tlPSIjM2QxZTA4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjEzIiByPSI1LjUiIGZpbGw9IiNjYzIyMDAiLz48Y2lyY2xlIGN4PSIyNSIgY3k9IjEyIiByPSI1IiBmaWxsPSIjZGQ1NTAwIi8+PGNpcmNsZSBjeD0iMTUiIGN5PSI4IiByPSI2LjUiIGZpbGw9IiNmZmFhMDAiLz48L3N2Zz4=">
     <style>
         * {
@@ -1273,17 +1273,17 @@
             <div class="control-group">
                 <div class="control-row">
                     <label for="layers">Layers</label>
-                    <span class="value" id="layers-val">8</span>
+                    <span class="value" id="layers-val">10</span>
                 </div>
-                <input type="range" id="layers" min="3" max="15" value="8">
+                <input type="range" id="layers" min="3" max="15" value="10">
             </div>
 
             <div class="control-group">
                 <div class="control-row">
                     <label for="start-len">Branch Length</label>
-                    <span class="value" id="start-len-val">15</span>
+                    <span class="value" id="start-len-val">18</span>
                 </div>
-                <input type="range" id="start-len" min="5" max="30" value="15">
+                <input type="range" id="start-len" min="5" max="30" value="18">
             </div>
 
             <div class="control-group">
@@ -1297,9 +1297,9 @@
             <div class="control-group">
                 <div class="control-row">
                     <label for="leaf-len">Leaf Length</label>
-                    <span class="value" id="leaf-len-val">4</span>
+                    <span class="value" id="leaf-len-val">5</span>
                 </div>
-                <input type="range" id="leaf-len" min="1" max="10" value="4">
+                <input type="range" id="leaf-len" min="1" max="10" value="5">
             </div>
 
             <hr class="separator">
@@ -1440,7 +1440,7 @@
                 Inspired by <a href="https://github.com/Ben-Edwards44/PyBonsai" target="_blank" rel="noopener">PyBonsai</a>
                 &amp; <a href="https://github.com/mhzawadi/homebrew-cbonsai" target="_blank" rel="noopener">cbonsai</a>
             </div>
-            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.32</div>
+            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.33</div>
         </aside>
 
         <main class="display-area bg-black">
@@ -2232,35 +2232,67 @@
         };
 
         // ============================================
-        // Seed Discovery Scoring
-        // Scores a generated grid 0–1 on complexity, proportions, spread, and density.
-        // Higher = more visually interesting. Used by discoverTree() to pick the best
-        // candidate from a batch of randomly-generated trees.
+        // Quality Scoring (v2 — fitted to human 1–5 ratings)
+        // Scores a generated grid 0–1. Derived from 200 hand-rated trees: the
+        // dominant signal is overall size, then a readable central trunk, foliage
+        // cohesion (one connected mass rather than scattered clumps), and some
+        // openness. Used by discoverTree() to surface the best of a batch.
+        //   score = 0.46*size + 0.26*trunk + 0.13*cohesion + 0.13*openness + 0.02*folCohesion
         // ============================================
         function scoreGrid(grid) {
             if (!grid || grid.cells.size === 0) return 0;
-            const w    = grid.maxX - grid.minX + 1;
-            const h    = grid.maxY - grid.minY + 1;
-            const dots = grid.cells.size;
-            const area = w * h;
-            if (w < 5 || h < 5 || area <= 0) return 0;
+            const cells = grid.cells;
+            const n = cells.size;
+            const w = grid.maxX - grid.minX + 1;
+            const h = grid.maxY - grid.minY + 1;
+            if (w < 5 || h < 5) return 0;
 
-            // Complexity: reward 400–2500 lit cells, penalise outliers
-            const complexityScore = Math.min(1.0, dots / 400) *
-                                    Math.max(0, 1 - Math.max(0, dots - 2500) / 2000);
+            // Classify cells: foliage set + central-trunk row coverage.
+            const foliage = new Set();
+            const trunkRows = new Set();
+            for (const [key, c] of cells) {
+                const g = c.glowKey || '';
+                if (g.indexOf('leaf') === 0 || g === 'fruit') {
+                    foliage.add(key);
+                } else if (g.indexOf('trunk') === 0) {
+                    const comma = key.indexOf(',');
+                    if (Math.abs(+key.slice(0, comma)) <= 2) trunkRows.add(+key.slice(comma + 1));
+                }
+            }
 
-            // Aspect ratio (width / height): sweet spot ~0.85, penalise extremes
-            const ar = w / h;
-            const arScore = Math.max(0, 1 - Math.abs(Math.log(Math.max(0.01, ar) / 0.85)));
+            // 8-connected components → {count, big} (largest component size).
+            const NB = [[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+            const componentStats = (keySet) => {
+                const visited = new Set();
+                let count = 0, big = 0;
+                for (const k of keySet) {
+                    if (visited.has(k)) continue;
+                    count++; let size = 0; const stack = [k]; visited.add(k);
+                    while (stack.length) {
+                        const cur = stack.pop(); size++;
+                        const comma = cur.indexOf(',');
+                        const cx = +cur.slice(0, comma), cy = +cur.slice(comma + 1);
+                        for (const d of NB) {
+                            const nk = (cx + d[0]) + ',' + (cy + d[1]);
+                            if (keySet.has(nk) && !visited.has(nk)) { visited.add(nk); stack.push(nk); }
+                        }
+                    }
+                    if (size > big) big = size;
+                }
+                return { count, big };
+            };
 
-            // Width spread: trees wider than 55 columns score well
-            const spreadScore = Math.min(1.0, w / 55);
+            const all = componentStats(new Set(cells.keys()));
+            const fol = componentStats(foliage);
 
-            // Density: lit cells / bounding-box area, sweet spot ~0.22
-            const density = dots / area;
-            const densityScore = Math.max(0, 1 - Math.abs(Math.log(Math.max(0.01, density) / 0.22)));
+            const size     = Math.min(1, n / 1500);
+            const trunk    = trunkRows.size / h;
+            const cohesion = all.big / n;
+            const fill     = n / (w * h);
+            const openness = 1 - Math.min(1, fill / 0.35);
+            const folCoh   = 1 - Math.min(1, Math.max(0, fol.count - 1) / 10);
 
-            return complexityScore * 0.35 + arScore * 0.25 + spreadScore * 0.25 + densityScore * 0.15;
+            return 0.46 * size + 0.26 * trunk + 0.13 * cohesion + 0.13 * openness + 0.02 * folCoh;
         }
 
         // ============================================
@@ -3338,10 +3370,10 @@
             treeType:  '0',        // Classic
             palette:   'autumn',
             monoColor: '#39ff14',
-            layers:    8,
-            startLen:  15,
+            layers:    10,
+            startLen:  18,
             angle:     40,
-            leafLen:   4,
+            leafLen:   5,
         };
 
         // All palette keys (for randomize)
@@ -4533,10 +4565,12 @@
                     const span = document.getElementById(`${id}-val`);
                     if (span) span.textContent = id === 'angle' ? `${val}°` : val;
                 };
-                setSlider('layers',    randInt(5, 12));
-                setSlider('start-len', randInt(8, 25));
+                // v2 realism: bias toward larger trees (size is the strongest
+                // predictor of human-rated quality). Ranges shifted upward.
+                setSlider('layers',    randInt(8, 14));
+                setSlider('start-len', randInt(15, 28));
                 setSlider('angle',     randInt(20, 65));
-                setSlider('leaf-len',  randInt(2, 8));
+                setSlider('leaf-len',  randInt(3, 9));
             }
 
             // Apply a full options object back to the DOM controls (used by discoverTree).
