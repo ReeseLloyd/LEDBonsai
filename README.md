@@ -1,5 +1,5 @@
 # LEDBonsai — Documentation
-**Version 1.33**
+**Version 1.34**
 
 LEDBonsai is a single-file, self-contained HTML application that generates procedural bonsai trees rendered as glowing LED dot-matrix displays. Trees are deterministic — any tree can be exactly reproduced from its seed and settings. No server, no dependencies, no installation required.
 
@@ -284,6 +284,7 @@ The **⏸** button lets you freeze on a tree you like without leaving focus mode
 
 | Version | Changes |
 |---|---|
+| **1.34** | Realism pass 2: recalibrated the quality metric on 600 ratings (trunk-led, size now a sweet-spot rather than "bigger=better"); trimmed the randomize size range to the sweet spot. Non-breaking |
 | **1.33** | Realism pass 1: bias generation toward larger trees (randomize ranges + defaults raised); replaced the discovery quality score with a metric fitted to human ratings (size + readable trunk + foliage cohesion + openness). Non-breaking — existing seeds still reproduce |
 | **1.32** | Updated "Inspired by" credit: replaced JSBonsai with a link to cbonsai (the actual upstream inspiration) |
 | **1.31** | Disabled the Literati tree type (too sparse in the LED-dot medium; code retained, commented out); added an in-app **About & Help** modal; added a link to the GitHub repo |
