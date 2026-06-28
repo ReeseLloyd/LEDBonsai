@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEDBonsai v1.30</title>
+    <title>LEDBonsai v1.31</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMTExMTE0Ii8+PHJlY3QgeD0iMTAiIHk9IjI2IiB3aWR0aD0iMTIiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiMzYTNhNGUiLz48cmVjdCB4PSIxMSIgeT0iMjgiIHdpZHRoPSIxMCIgaGVpZ2h0PSIzIiByeD0iMSIgZmlsbD0iIzJlMmUzZSIvPjxyZWN0IHg9IjE1IiB5PSIxOCIgd2lkdGg9IjIiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiMzZDFlMDgiLz48bGluZSB4MT0iMTUuNSIgeTE9IjIzIiB4Mj0iNyIgeTI9IjE2IiBzdHJva2U9IiMzZDFlMDgiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMTYuNSIgeTE9IjIyIiB4Mj0iMjUiIHkyPSIxNSIgc3Ryb2tlPSIjM2QxZTA4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjEzIiByPSI1LjUiIGZpbGw9IiNjYzIyMDAiLz48Y2lyY2xlIGN4PSIyNSIgY3k9IjEyIiByPSI1IiBmaWxsPSIjZGQ1NTAwIi8+PGNpcmNsZSBjeD0iMTUiIGN5PSI4IiByPSI2LjUiIGZpbGw9IiNmZmFhMDAiLz48L3N2Zz4=">
     <style>
         * {
@@ -629,6 +629,34 @@
             min-height: 1rem;
         }
 
+        /* Help / About modal */
+        .modal.modal-help {
+            width: min(560px, 92vw);
+            max-height: 82vh;
+            overflow-y: auto;
+            text-align: left;
+        }
+        .help-content { display: flex; flex-direction: column; gap: 0.2rem; }
+        .help-content h3 {
+            color: var(--accent-color);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-top: 0.9rem;
+            text-shadow: 0 0 6px rgba(57,255,20,0.3);
+        }
+        .help-content p  { font-size: 0.82rem; color: #aaa; line-height: 1.55; }
+        .help-content ul { margin: 0.2rem 0 0 0; padding-left: 1.1rem; }
+        .help-content li { font-size: 0.82rem; color: #aaa; line-height: 1.5; }
+        .help-content a  { color: var(--accent-color); text-decoration: none; }
+        .help-content a:hover { text-decoration: underline; }
+        .help-content strong { color: #ccc; }
+        .help-content kbd {
+            background: #1a1a1a; border: 1px solid #333; border-radius: 3px;
+            padding: 0 0.3rem; font-size: 0.78rem; color: #ccc;
+            font-family: "Courier New", monospace;
+        }
+
         /* Focus / presentation mode */
         .focus-btn {
             position: fixed;
@@ -1203,7 +1231,7 @@
                     <option value="1">Fibonacci</option>
                     <option value="2">Offset Fibonacci</option>
                     <option value="3">Random Fibonacci</option>
-                    <option value="4">Literati</option>
+                    <!-- <option value="4">Literati</option> -- disabled: too sparse in the LED-dot medium -->
                     <option value="5">Cascade</option>
                 </select>
             </div>
@@ -1403,11 +1431,16 @@
 
             <hr class="separator">
 
+            <button id="help-btn" class="btn-secondary">❓ About &amp; Help</button>
+
+            <div class="credit" style="margin-top:0.5rem;">
+                <a href="https://github.com/ReeseLloyd/LEDBonsai" target="_blank" rel="noopener">View &amp; fork on GitHub</a>
+            </div>
             <div class="credit">
                 Inspired by <a href="https://github.com/Ben-Edwards44/PyBonsai" target="_blank" rel="noopener">PyBonsai</a>
                 &amp; JSBonsai
             </div>
-            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.30</div>
+            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.31</div>
         </aside>
 
         <main class="display-area bg-black">
@@ -1480,6 +1513,51 @@
                 <button id="export-confirm-btn">Download PNG</button>
             </div>
             <div class="export-status" id="export-status"></div>
+        </div>
+    </div>
+
+    <!-- Help / About modal -->
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal modal-help">
+            <h2>About &amp; Help</h2>
+            <div class="help-content">
+                <p><strong>LEDBonsai</strong> generates procedural bonsai trees rendered as glowing LED dot-matrix displays. Every tree is deterministic — the same seed and settings always produce the identical tree, so any tree can be shared or saved and reproduced exactly.</p>
+
+                <h3>Getting started</h3>
+                <ul>
+                    <li><strong>Start</strong> — grow a tree from the current settings.</li>
+                    <li><strong>🎲</strong> — pick a new random seed, then grow.</li>
+                    <li><strong>🎰</strong> — randomize everything (type, palette, shape, seed).</li>
+                    <li><strong>🔭</strong> — scan several random trees and show the most interesting one.</li>
+                    <li><strong>↺</strong> — restore default settings.</li>
+                </ul>
+
+                <h3>Shaping the tree</h3>
+                <p>Choose a <strong>Tree Type</strong> (Classic, the Fibonacci variants, or Cascade) and a <strong>Palette</strong>. The Structure sliders set size and form — Layers, Branch Length, Branch Angle, and Leaf Length — and the Pot and LED Effects sections adjust the planter and glow.</p>
+
+                <h3>Focus mode &amp; ambient display</h3>
+                <p>The <strong>⊡</strong> button (top-right) hides all controls and fills the screen — ideal as an ambient display or a Raspberry Pi kiosk. In focus mode you also get pause (⏸), pin (☆), skip (⏭), and fullscreen (⛶); these fade out after a few seconds of no mouse movement. Turn on <strong>Auto-advance</strong> to cycle through new trees on a timer.</p>
+
+                <h3>Sharing &amp; pins</h3>
+                <p>After each tree a <strong>shareable URL</strong> appears in the Share box, encoding all settings — open it anywhere to see the same tree. <strong>☆ Pin Tree</strong> saves a tree in your browser; <strong>📌 Pins</strong> opens your saved collection.</p>
+
+                <h3>Export</h3>
+                <p><strong>Export…</strong> saves the current tree as a PNG (with a choice of backgrounds) or a scalable SVG.</p>
+
+                <h3>Keyboard shortcuts</h3>
+                <ul>
+                    <li><kbd>Space</kbd> / <kbd>Enter</kbd> — new tree (or pause, in focus mode)</li>
+                    <li><kbd>N</kbd> — skip to next tree (focus mode)</li>
+                    <li><kbd>D</kbd> — run discovery (focus mode)</li>
+                    <li><kbd>Esc</kbd> — exit focus mode</li>
+                    <li><kbd>Ctrl/Cmd</kbd> + scroll — zoom</li>
+                </ul>
+
+                <p style="margin-top:1rem;">Open source — <a href="https://github.com/ReeseLloyd/LEDBonsai" target="_blank" rel="noopener">github.com/ReeseLloyd/LEDBonsai</a>. Forks welcome.</p>
+            </div>
+            <div class="modal-actions">
+                <button id="help-close-btn">Close</button>
+            </div>
         </div>
     </div>
 
@@ -2793,6 +2871,13 @@
         }
         */
 
+        // LiteratiTree is DISABLED — it looks too sparse/boring in the LED-dot
+        // medium. The class is kept (commented out) for possible future use.
+        // To re-enable: remove the block-comment markers around this class,
+        // restore the LiteratiTree entry at index 4 in BOTH TREE_CLASSES arrays,
+        // uncomment the <option value="4">Literati</option> in the tree-type
+        // <select>, and add '4' back to the TREE_TYPES randomize rotation.
+        /*
         // ============================================
         // Literati (Bunjin) Tree
         // A formal bonsai style: thin, dramatically wandering trunk with very few
@@ -2892,6 +2977,7 @@
             }
         }
 
+        */
         // ============================================
         // Cascade (Kengai) Tree
         // A formal bonsai style where the trunk and primary branches lean heavily
@@ -3260,7 +3346,7 @@
 
         // All palette keys (for randomize)
         const PALETTE_KEYS = ['autumn', 'maple', 'cherry', 'willow', 'juniper', 'winter', 'birch', 'jacaranda', 'wisteria', 'winterbare', 'sakuranight', 'bioluminescent', 'fog', 'spring', 'midnight', 'dusk', 'ember', 'monochrome'];
-        const TREE_TYPES   = ['0', '1', '2', '3', '4', '5'];
+        const TREE_TYPES   = ['0', '1', '2', '3', '5'];   // '4' = Literati (disabled)
 
         // ============================================
         // Main Application
@@ -4205,6 +4291,11 @@
                 }, { passive: false });
 
                 document.addEventListener('keydown', (e) => {
+                    // Close the Help modal on Escape before any focus-mode handling
+                    if (e.key === 'Escape' && document.getElementById('help-modal').classList.contains('visible')) {
+                        document.getElementById('help-modal').classList.remove('visible');
+                        return;
+                    }
                     if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) {
                         document.body.classList.remove('focus-mode');
                         this.focusBtn.title = 'Focus mode (hide controls)';
@@ -4398,6 +4489,19 @@
                         this.exportPNG(bgType);
                     }
                 });
+
+                // Help / About modal
+                document.getElementById('help-btn').addEventListener('click', () => {
+                    document.getElementById('help-modal').classList.add('visible');
+                });
+                document.getElementById('help-close-btn').addEventListener('click', () => {
+                    document.getElementById('help-modal').classList.remove('visible');
+                });
+                document.getElementById('help-modal').addEventListener('click', (e) => {
+                    if (e.target === document.getElementById('help-modal')) {
+                        document.getElementById('help-modal').classList.remove('visible');
+                    }
+                });
             }
 
             randomizeAll() {
@@ -4467,7 +4571,9 @@
             async discoverTree(statusEl) {
                 const batchSize = parseInt(document.getElementById('discover-batch').value) || 20;
                 const TREE_CLASSES = [ClassicTree, FibonacciTree, OffsetFibTree,
-                                      RandomOffsetFibTree, LiteratiTree, CascadeTree];
+                                      RandomOffsetFibTree,
+                                      ClassicTree, /* index 4 = Literati (disabled) */
+                                      CascadeTree];
                 let bestScore   = -1;
                 let bestOptions = null;
 
@@ -4967,7 +5073,8 @@
                 // type) can declare how much extra vertical space it needs above the pot.
                 const TREE_CLASSES = [
                     ClassicTree, FibonacciTree, OffsetFibTree, RandomOffsetFibTree,
-                    LiteratiTree, CascadeTree,
+                    ClassicTree, /* index 4 = Literati (disabled) — falls back to Classic */
+                    CascadeTree,
                 ];
                 const TreeClass = TREE_CLASSES[options.treeType] || ClassicTree;
                 let rootY = Tree.BOX_HEIGHT + 4 + TreeClass.rootYOffset(options);

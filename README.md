@@ -1,5 +1,5 @@
 # LEDBonsai — Documentation
-**Version 1.30**
+**Version 1.31**
 
 LEDBonsai is a single-file, self-contained HTML application that generates procedural bonsai trees rendered as glowing LED dot-matrix displays. Trees are deterministic — any tree can be exactly reproduced from its seed and settings. No server, no dependencies, no installation required.
 
@@ -77,7 +77,7 @@ Seed discovery silently generates a batch of random trees, scores each one for v
 
 ## Tree Types
 
-Six tree types are available, each implementing a distinct growth algorithm.
+Six tree types are implemented. Five are currently selectable; **Literati is disabled** in this build (it looks too sparse in the LED-dot medium). Its code is retained, commented out, and can be re-enabled later.
 
 | Type | Description |
 |---|---|
@@ -85,10 +85,10 @@ Six tree types are available, each implementing a distinct growth algorithm.
 | **Fibonacci** | Branch counts follow the Fibonacci sequence at each layer. Produces asymmetric, naturally irregular trees that tend to lean. |
 | **Offset Fibonacci** | Fibonacci branching with additional positional offset along parent branches, creating more organic-feeling growth. |
 | **Random Fibonacci** | Fibonacci branching with fully randomized growth-point positions along each branch rather than strictly at the tips. Produces the most naturalistic and unpredictable results. |
-| **Literati** | Inspired by the formal Japanese *bunjin* (literati) bonsai style. A thin trunk meanders dramatically with each layer. Branching is suppressed in the lower half of the tree and sparse near the apex, concentrating foliage into a few expressive clusters at the top. Looks painterly and minimal compared to the denser types. |
+| **Literati** *(disabled)* | Inspired by the formal Japanese *bunjin* (literati) bonsai style. A thin trunk meanders dramatically with each layer. Branching is suppressed in the lower half of the tree and sparse near the apex, concentrating foliage into a few expressive clusters at the top. Looks painterly and minimal compared to the denser types. |
 | **Cascade** | Inspired by the *kengai* (cascade) bonsai style. The pot is positioned near the top of the composition; the trunk and branches lean strongly to one side and arc downward, with foliage falling below the pot rim. A short upward "back branch" on the opposite side appears in most seeds, providing the compositional balance characteristic of authentic Kengai style. The cascade direction (left or right) and the height at which the trunk emerges from the pot are both randomized per seed. |
 
-All six types are included in the **🎰 Randomize All** rotation.
+All currently-enabled types are included in the **🎰 Randomize All** rotation.
 
 ### Architecture note
 
@@ -284,6 +284,7 @@ The **⏸** button lets you freeze on a tree you like without leaving focus mode
 
 | Version | Changes |
 |---|---|
+| **1.31** | Disabled the Literati tree type (too sparse in the LED-dot medium; code retained, commented out); added an in-app **About & Help** modal; added a link to the GitHub repo |
 | **1.30** | Animated rendering rewritten to update only changed LED cells in place (render hook) instead of re-serializing the whole grid every tick — large trees animate smoothly on low-power devices (Raspberry Pi) |
 | **1.29** | Documentation: synced README and CLAUDE.md to current code — `ledbonsai.html` filename, full URL-parameter list, Seed Discovery section, focus-mode auto-hide and `hidectrl` kiosk note, and the `D` keyboard shortcut |
 | **1.28** | Fixed malformed Wisteria palette swatch color; pin labels now name Literati and Cascade trees; removed dead JSBonsai credit link |
