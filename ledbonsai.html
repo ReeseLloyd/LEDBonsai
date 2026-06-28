@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEDBonsai v1.29</title>
+    <title>LEDBonsai v1.30</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMTExMTE0Ii8+PHJlY3QgeD0iMTAiIHk9IjI2IiB3aWR0aD0iMTIiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiMzYTNhNGUiLz48cmVjdCB4PSIxMSIgeT0iMjgiIHdpZHRoPSIxMCIgaGVpZ2h0PSIzIiByeD0iMSIgZmlsbD0iIzJlMmUzZSIvPjxyZWN0IHg9IjE1IiB5PSIxOCIgd2lkdGg9IjIiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiMzZDFlMDgiLz48bGluZSB4MT0iMTUuNSIgeTE9IjIzIiB4Mj0iNyIgeTI9IjE2IiBzdHJva2U9IiMzZDFlMDgiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMTYuNSIgeTE9IjIyIiB4Mj0iMjUiIHkyPSIxNSIgc3Ryb2tlPSIjM2QxZTA4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjEzIiByPSI1LjUiIGZpbGw9IiNjYzIyMDAiLz48Y2lyY2xlIGN4PSIyNSIgY3k9IjEyIiByPSI1IiBmaWxsPSIjZGQ1NTAwIi8+PGNpcmNsZSBjeD0iMTUiIGN5PSI4IiByPSI2LjUiIGZpbGw9IiNmZmFhMDAiLz48L3N2Zz4=">
     <style>
         * {
@@ -1407,7 +1407,7 @@
                 Inspired by <a href="https://github.com/Ben-Edwards44/PyBonsai" target="_blank" rel="noopener">PyBonsai</a>
                 &amp; JSBonsai
             </div>
-            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.29</div>
+            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.30</div>
         </aside>
 
         <main class="display-area bg-black">
@@ -1567,6 +1567,10 @@
                 this.maxX = -Infinity;
                 this.minY = Infinity;
                 this.maxY = -Infinity;
+                // Optional hook fired on every setChar. When set (animated mode),
+                // the app uses it to light one DOM cell instead of re-rendering
+                // the whole grid each tick. Null in instant / pre-pass grids.
+                this.renderHook = null;
             }
 
             clear() {
@@ -1588,7 +1592,9 @@
                 this.maxX = Math.max(this.maxX, sx);
                 this.minY = Math.min(this.minY, sy);
                 this.maxY = Math.max(this.maxY, sy);
-                this.cells.set(this.getKey(sx, sy), { color, glowKey, isUnlit });
+                const cell = { color, glowKey, isUnlit };
+                this.cells.set(this.getKey(sx, sy), cell);
+                if (this.renderHook) this.renderHook(sx, sy, cell);
                 return { screenX: sx, screenY: sy };
             }
 
@@ -3297,6 +3303,9 @@
                 this.lastGrid       = null;
                 this.lastGridBounds = null;
 
+                // Incremental-render cell map (animated mode): "x,y" → <span> element
+                this.cellSpans      = null;
+
                 // Set by loadFromUrl when focus=1 is in the URL; consumed after first generate()
                 this.pendingFocusMode = false;
 
@@ -3985,6 +3994,58 @@
                 const ty       = (vpH - scaledH) / 2;
 
                 this.display.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
+            }
+
+            // ── Incremental render (animated mode) ───────────────────────────
+            // Build a fixed grid of DOM cells spanning `bounds`. Every cell that
+            // will eventually be lit (known from the instant pre-pass `boundsGrid`)
+            // gets an addressable <span>, stored in this.cellSpans keyed "x,y".
+            // Cells that stay dark are emitted as bare spaces, or as static
+            // unlit-dot spans when the panel option is on. Building this once and
+            // mutating cells in place replaces the old approach of re-serializing
+            // the entire bounding box to innerHTML on every animation tick.
+            buildCellGrid(bounds, showUnlit, boundsGrid) {
+                const { minX, maxX, minY, maxY } = bounds;
+                this.cellSpans = new Map();
+                const spanKeys = [];   // key for every emitted <span>, in document order
+                let html = '';
+                for (let y = maxY; y >= minY; y--) {
+                    for (let x = minX; x <= maxX; x++) {
+                        const key   = `${x},${y}`;
+                        const isLit = boundsGrid.cells.has(key);
+                        if (showUnlit) {
+                            // Every cell is a span; lit-to-be cells start as unlit dots.
+                            html += `<span style="color:${UNLIT_COLOR}">${UNLIT_DOT}</span>`;
+                            spanKeys.push(key);
+                        } else if (isLit) {
+                            // Addressable placeholder, one column wide, initially blank.
+                            html += `<span> </span>`;
+                            spanKeys.push(key);
+                        } else {
+                            html += ' ';
+                        }
+                    }
+                    if (y > minY) html += '\n';
+                }
+                this.canvas.innerHTML = html;
+
+                // querySelectorAll returns spans in document order, matching spanKeys.
+                // Keep refs only for cells that will actually be lit.
+                const spans = this.canvas.querySelectorAll('span');
+                for (let i = 0; i < spanKeys.length; i++) {
+                    if (boundsGrid.cells.has(spanKeys[i])) {
+                        this.cellSpans.set(spanKeys[i], spans[i]);
+                    }
+                }
+            }
+
+            // Turn a single grid cell into a lit LED. The style string is
+            // byte-identical to Grid.render()'s output so PNG/SVG export parsing
+            // (which walks the rendered DOM) is unaffected.
+            applyCellSpan(span, cell) {
+                span.textContent = LED_DOT;
+                span.setAttribute('style',
+                    `color:${cell.color};text-shadow:${buildGlowStyle(cell.color, cell.glowKey)}`);
             }
 
             bindControls() {
@@ -4943,11 +5004,29 @@
                         minY: boundsGrid.minY, maxY: boundsGrid.maxY,
                     };
 
-                    // Seed the canvas with the complete pre-pass render before animation
-                    // begins. This locks in the correct dimensions so fitToViewport() can
-                    // measure the real DOM size immediately, eliminating the snap-zoom at
-                    // the end. The animation will overwrite cells as it runs normally.
-                    this.canvas.innerHTML = boundsGrid.render(showUnlit, finalBounds);
+                    // Build a fixed grid of addressable DOM cells (one <span> per
+                    // to-be-lit cell, known from the instant pre-pass in boundsGrid).
+                    // The animation then lights cells individually via grid.renderHook
+                    // instead of re-serializing the entire bounding box every tick.
+                    // This also locks in the correct dimensions immediately, so
+                    // fitToViewport() measures the real DOM size with no end-of-run snap.
+                    this.buildCellGrid(finalBounds, showUnlit, boundsGrid);
+
+                    // Paint any cells already set synchronously during draw() — the pot
+                    // and tree base are drawn before the animation queue runs.
+                    for (const [key, cell] of grid.cells) {
+                        const span = this.cellSpans.get(key);
+                        if (span) this.applyCellSpan(span, cell);
+                    }
+
+                    // Light each cell as its queued draw action runs. The stale-genId
+                    // guard stops a superseded generation from painting stray cells.
+                    grid.renderHook = (x, y, cell) => {
+                        if (genId !== this.animQueue.generationId) return;
+                        const span = this.cellSpans.get(`${x},${y}`);
+                        if (span) this.applyCellSpan(span, cell);
+                    };
+
                     requestAnimationFrame(() => this.fitToViewport());
 
                     // Map speed (1–100) to delay + batchSize so the full slider range
@@ -4968,9 +5047,11 @@
                         batchSize = Math.round(4 + (s - 71) * (8 / 29));
                     }
 
-                    await this.animQueue.run(delay, batchSize, () => {
-                        this.canvas.innerHTML = grid.render(showUnlit, finalBounds);
-                    }, genId);
+                    // The renderHook paints cells incrementally, so the per-tick
+                    // callback no longer re-renders the whole grid.
+                    await this.animQueue.run(delay, batchSize, () => {}, genId);
+
+                    grid.renderHook = null;
 
                     if (genId === this.animQueue.generationId) {
                         this.lastGrid = grid;
