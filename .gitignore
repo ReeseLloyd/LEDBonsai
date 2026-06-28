@@ -1,1 +1,7 @@
 .DS_Store
+
+# Local Claude Code config
+.claude/
+
+# Local Pi scope/notes (not part of the published project)
+LEDBonsaiPi-Scope.md
