@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LEDBonsai v1.34</title>
+    <title>LEDBonsai v1.35</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMTExMTE0Ii8+PHJlY3QgeD0iMTAiIHk9IjI2IiB3aWR0aD0iMTIiIGhlaWdodD0iMiIgcng9IjEiIGZpbGw9IiMzYTNhNGUiLz48cmVjdCB4PSIxMSIgeT0iMjgiIHdpZHRoPSIxMCIgaGVpZ2h0PSIzIiByeD0iMSIgZmlsbD0iIzJlMmUzZSIvPjxyZWN0IHg9IjE1IiB5PSIxOCIgd2lkdGg9IjIiIGhlaWdodD0iOSIgcng9IjEiIGZpbGw9IiMzZDFlMDgiLz48bGluZSB4MT0iMTUuNSIgeTE9IjIzIiB4Mj0iNyIgeTI9IjE2IiBzdHJva2U9IiMzZDFlMDgiIHN0cm9rZS13aWR0aD0iMS41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48bGluZSB4MT0iMTYuNSIgeTE9IjIyIiB4Mj0iMjUiIHkyPSIxNSIgc3Ryb2tlPSIjM2QxZTA4IiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PGNpcmNsZSBjeD0iNiIgY3k9IjEzIiByPSI1LjUiIGZpbGw9IiNjYzIyMDAiLz48Y2lyY2xlIGN4PSIyNSIgY3k9IjEyIiByPSI1IiBmaWxsPSIjZGQ1NTAwIi8+PGNpcmNsZSBjeD0iMTUiIGN5PSI4IiByPSI2LjUiIGZpbGw9IiNmZmFhMDAiLz48L3N2Zz4=">
     <style>
         * {
@@ -869,6 +869,13 @@
             top: 0;
             left: 0;
         }
+
+        /* Lite mode (?lite=1): canvas-only ambient display for low-power devices.
+           Everything except the canvas is removed from layout. */
+        body.lite-mode { overflow: hidden; background: #000; }
+        body.lite-mode > *:not(#lite-canvas):not(script) { display: none !important; }
+        #lite-canvas { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
+        body.lite-mode #lite-canvas { display: block; }
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -1440,7 +1447,7 @@
                 Inspired by <a href="https://github.com/Ben-Edwards44/PyBonsai" target="_blank" rel="noopener">PyBonsai</a>
                 &amp; <a href="https://github.com/mhzawadi/homebrew-cbonsai" target="_blank" rel="noopener">cbonsai</a>
             </div>
-            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.34</div>
+            <div class="credit" style="margin-top:0.35rem;font-size:0.7rem;color:#333;">v1.35</div>
         </aside>
 
         <main class="display-area bg-black">
@@ -3368,6 +3375,25 @@
                      metrics: estimateTotalRenderBytes(Object.assign({}, options, { layers: 3 })) };
         }
 
+
+        // ============================================
+        // Lite mode (?lite=1) — canvas renderer for low-power devices (Pi Zero 2 W)
+        // The tree is drawn onto a <canvas> at an integer dot pitch instead of as
+        // thousands of text-shadowed DOM spans. Grid generation is unchanged, so any
+        // seed/settings render the identical tree as in the full app.
+        // ============================================
+        const LITE_MARGIN_FRAC   = 0.03;    // screen margin as a fraction of the short side
+        const LITE_MIN_PITCH     = 4;       // px per LED; discovery rejects trees that would fit smaller
+        const LITE_MAX_PITCH     = 12;      // px per LED cap, so tiny trees don't become giant dots
+const LITE_FILL_WEIGHT   = 0.15;    // discovery bonus for trees that fill the panel
+const LITE_BLOOM_PASSES  = 2;       // glow strength: how many times each blurred layer is added
+        const LITE_DOT_RADIUS    = 0.42;    // LED radius as a fraction of the pitch
+        const LITE_DOT_BUDGET    = 120000;  // est. dots; layers are clamped to stay under this
+        const LITE_DEFAULT_BATCH = 12;      // discovery candidates per tree in lite mode
+        const LITE_DEFAULT_SECS  = 300;     // default auto-advance interval
+        const LITE_ANIM_SECONDS  = 8;       // duration of the optional grow animation (?liteanim=1)
+        const LITE_BG = { 'dark-grey': '#131316', 'black': '#000000', 'white': '#f5f5f5', 'parchment': '#e8dbb0' };
+
         // ============================================
         // Hardcoded defaults (for the Defaults button)
         // ============================================
@@ -3435,6 +3461,14 @@
                 // Focus mode idle-hide state
                 this.focusIdleTimer = null;
                 this.hideCtrl       = false;
+
+                // Lite mode (?lite=1): canvas-only ambient display for low-power devices
+                const query    = new URLSearchParams(window.location.search);
+                this.lite      = query.get('lite') === '1';
+                this.liteAnim  = query.get('liteanim') === '1';
+                this.liteScene = null;   // geometry + offscreen layers of the tree on screen
+                this.liteToken = 0;      // bumped per render so stale animations stop
+                if (this.lite) this.initLite();
 
                 this.buildPalettePicker();
                 this.bindControls();
@@ -3867,6 +3901,16 @@
 
             scheduleNextTree() {
                 const interval = parseInt(document.getElementById('screensaver-interval').value) * 1000;
+
+                // Lite mode: no countdown label or progress bar, just one timer
+                if (this.lite) {
+                    if (this.screensaverTimer) clearTimeout(this.screensaverTimer);
+                    this.screensaverTimer = setTimeout(() => {
+                        if (document.getElementById('screensaver').checked) this.liteAdvance();
+                    }, interval);
+                    return;
+                }
+
                 let remaining  = Math.round(interval / 1000);
 
                 const updateLabel = () => {
@@ -3909,7 +3953,7 @@
                 const knownParams = ['seed','type','layers','len','angle','leaf','palette',
                                      'potcolor','potsize','glow','fruit','unlit','canbg',
                                      'screensaver','ssinterval','focus','discover','discoverbatch',
-                                     'hidectrl'];
+                                     'hidectrl','lite','liteanim'];
                 if (!knownParams.some(k => params.has(k))) return false;
 
                 const paramMap = {
@@ -4004,6 +4048,26 @@
                 // Focus mode is applied after generate() completes so the tree exists to fit
                 this.pendingFocusMode = params.get('focus') === '1';
 
+                // Lite mode implies an unattended display: auto-advance with best-of-N
+                // discovery, no controls, and no DOM focus mode (the canvas is the display).
+                if (this.lite) {
+                    this.pendingFocusMode = false;
+                    this.hideCtrl = true;
+                    document.getElementById('screensaver').checked = true;
+                    document.getElementById('discover-mode').checked = true;
+                    if (!params.has('ssinterval')) {
+                        document.getElementById('screensaver-interval').value = LITE_DEFAULT_SECS;
+                    }
+                    if (!params.has('discoverbatch')) {
+                        document.getElementById('discover-batch').value = LITE_DEFAULT_BATCH;
+                    }
+                    // No seed given: open on a discovered tree instead of the slider defaults
+                    if (!params.has('seed')) {
+                        this.liteAdvance();
+                        return true;
+                    }
+                }
+
                 this.generate();
                 return true;
             }
@@ -4036,6 +4100,10 @@
                 params.set('discover', discoverChecked ? '1' : '0');
                 if (discoverChecked) {
                     params.set('discoverbatch', document.getElementById('discover-batch').value);
+                }
+                if (this.lite) {
+                    params.set('lite', '1');
+                    if (this.liteAnim) params.set('liteanim', '1');
                 }
                 return `${window.location.origin}${window.location.pathname}?${params.toString()}`;
             }
@@ -4624,7 +4692,8 @@
                     // Clamp layers using the real instant setting (same logic generate() uses),
                     // then override instant: true just for the silent scan pass.
                     const rawOptions = this.getOptions();
-                    rawOptions.layers = safeLayerCount(rawOptions).layers;
+                    rawOptions.layers = (this.lite ? this.liteLayerCap(rawOptions)
+                                                   : safeLayerCount(rawOptions)).layers;
                     const options = { ...rawOptions, instant: true };
 
                     // Resolve random pot color without touching the main RNG sequence
@@ -4641,7 +4710,17 @@
                     if (rootY % 2 !== 0) rootY++;
                     new TreeClass(grid, 0, rootY, options, rng, new AnimationQueue()).draw();
 
-                    const score = scoreGrid(grid);
+                    let score = scoreGrid(grid);
+                    if (this.lite) {
+                        // Trees too big to stay legible at the minimum dot pitch rank
+                        // below every tree that fits (but remain a fallback).
+                        const vp = this.liteViewport();
+                        const fit = this.liteFit(grid, vp.W, vp.H);
+                        if (fit.raw < LITE_MIN_PITCH) score -= 1;
+                        // Favor trees that use more of the panel (at the capped pitch)
+                        const span = Math.min(vp.W, vp.H) * (1 - 2 * LITE_MARGIN_FRAC);
+                        score += LITE_FILL_WEIGHT * Math.min(1, fit.pitch * Math.max(grid.getWidth(), grid.getHeight()) / span);
+                    }
                     if (score > bestScore) {
                         bestScore   = score;
                         bestOptions = options;
@@ -4652,6 +4731,219 @@
                 }
 
                 return bestOptions;
+            }
+
+
+            // ── Lite mode (canvas renderer) ──────────────────────────────────
+            initLite() {
+                document.body.classList.add('lite-mode');
+                const cv = document.createElement('canvas');
+                cv.id = 'lite-canvas';
+                document.body.appendChild(cv);
+                this.liteCanvas = cv;
+
+                let resizeTimer = null;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(() => {
+                        const sc = this.liteScene;
+                        if (!sc) return;
+                        this.liteToken++;   // cancel any in-flight animation (old geometry)
+                        this.liteLayout(sc);
+                        this.liteDraw(sc, 1);
+                    }, 200);
+                });
+            }
+
+            // Discover the next tree and show it (lite mode's equivalent of a skip).
+            async liteAdvance() {
+                const best = await this.discoverTree(null);
+                if (best) this.applyOptions(best);
+                await this.generate();
+            }
+
+            liteViewport() {
+                const dpr = window.devicePixelRatio || 1;
+                return { W: Math.round(window.innerWidth * dpr), H: Math.round(window.innerHeight * dpr) };
+            }
+
+            // Largest integer pitch (px per LED) at which the grid fits the screen.
+            // `raw` is uncapped (used to reject unreadably large trees); `pitch` is
+            // clamped to [1, LITE_MAX_PITCH] for drawing.
+            liteFit(grid, W, H) {
+                const m   = Math.round(LITE_MARGIN_FRAC * Math.min(W, H));
+                const raw = Math.floor(Math.min((W - 2 * m) / grid.getWidth(), (H - 2 * m) / grid.getHeight()));
+                return { raw, pitch: Math.max(1, Math.min(LITE_MAX_PITCH, raw)) };
+            }
+
+            // Lite mode skips the 1 GB string budget (there are no strings) and
+            // instead caps layers so the estimated dot count stays generation-friendly.
+            liteLayerCap(options) {
+                const start = Math.max(3, options.layers);
+                for (let l = start; l >= 3; l--) {
+                    const est = estimateTotalRenderBytes(Object.assign({}, options, { layers: l, instant: true }));
+                    if (est.totalDots <= LITE_DOT_BUDGET || l === 3) {
+                        return { layers: l, clamped: l !== options.layers, metrics: est };
+                    }
+                }
+            }
+
+            liteLayout(sc) {
+                const { W, H } = this.liteViewport();
+                const { pitch } = this.liteFit(sc.grid, W, H);
+                sc.W = W; sc.H = H; sc.pitch = pitch;
+                sc.ox = Math.floor((W - sc.grid.getWidth()  * pitch) / 2);
+                sc.oy = Math.floor((H - sc.grid.getHeight() * pitch) / 2);
+                sc.dots = null;     // offscreen layers depend on geometry
+                sc.levels = null;
+                // Keep the bitmap in step with the viewport (resize / pixel-ratio change)
+                const cv = this.liteCanvas;
+                if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+            }
+
+            renderLite(grid, options, log) {
+                const token = ++this.liteToken;
+                const bgKey = document.getElementById('canvas-bg').value;
+                const sc = {
+                    grid,
+                    bg:     LITE_BG[bgKey] || LITE_BG.black,
+                    dark:   bgKey !== 'white' && bgKey !== 'parchment',
+                    unlit:  options.unlitPanel,
+                    glow:   options.glowIntensity && bgKey !== 'white' && bgKey !== 'parchment',
+                    dots: null, levels: null,
+                };
+                this.liteScene = sc;
+                this.liteLayout(sc);
+
+                if (log && log.length) {
+                    this.liteAnimate(sc, log, token);
+                } else {
+                    this.liteDraw(sc, 1);
+                }
+            }
+
+            // Draw one LED at grid cell (x, y). Grid y grows upward; screen y downward.
+            liteLed(c, sc, x, y, color) {
+                const p  = sc.pitch;
+                const px = sc.ox + (x - sc.grid.minX) * p;
+                const py = sc.oy + (sc.grid.maxY - y) * p;
+                c.fillStyle = color;
+                if (p <= 2) { c.fillRect(px, py, p, p); return; }
+                c.beginPath();
+                c.arc(px + p / 2, py + p / 2, p * LITE_DOT_RADIUS, 0, Math.PI * 2);
+                c.fill();
+            }
+
+            // Background plus the optional unlit-panel dot lattice (whole screen).
+            litePaintBase(ctx, sc) {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = sc.bg;
+                ctx.fillRect(0, 0, sc.W, sc.H);
+                if (!sc.unlit || sc.pitch <= 2) return;
+                const p = sc.pitch;
+                ctx.fillStyle = sc.dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.12)';
+                ctx.beginPath();
+                for (let x = sc.ox % p; x < sc.W; x += p) {
+                    for (let y = sc.oy % p; y < sc.H; y += p) {
+                        ctx.moveTo(x + p / 2 + p * 0.25, y + p / 2);
+                        ctx.arc(x + p / 2, y + p / 2, p * 0.25, 0, Math.PI * 2);
+                    }
+                }
+                ctx.fill();
+            }
+
+            // Lit LEDs only, on a transparent offscreen canvas (built once per layout).
+            liteDotsLayer(sc) {
+                if (sc.dots) return sc.dots;
+                const d = document.createElement('canvas');
+                d.width = sc.W; d.height = sc.H;
+                const dc = d.getContext('2d');
+                for (const [key, cell] of sc.grid.cells) {
+                    if (cell.isUnlit) continue;
+                    const comma = key.indexOf(',');
+                    this.liteLed(dc, sc, +key.slice(0, comma), +key.slice(comma + 1), cell.color);
+                }
+                sc.dots = d;
+                return d;
+            }
+
+            // Cheap bloom: successively halve the dots layer (1/2, 1/4, 1/8). Blending
+            // the small copies back scaled up gives a soft halo in a handful of blits,
+            // independent of LED count, and needs no ctx.filter support.
+            liteBloomLevels(sc) {
+                if (sc.levels) return sc.levels;
+                const levels = [];
+                let prev = this.liteDotsLayer(sc), w = sc.W, h = sc.H;
+                for (let i = 0; i < 3; i++) {
+                    w = Math.max(1, w >> 1); h = Math.max(1, h >> 1);
+                    const c = document.createElement('canvas');
+                    c.width = w; c.height = h;
+                    const cx = c.getContext('2d');
+                    cx.imageSmoothingQuality = 'high';
+                    cx.drawImage(prev, 0, 0, w, h);
+                    levels.push(c);
+                    prev = c;
+                }
+                sc.levels = levels;
+                return levels;
+            }
+
+            // Compose the finished frame. `bloom` (0–1) scales the glow, so the
+            // animation can fade it in.
+            liteDraw(sc, bloom) {
+                const ctx = this.liteCanvas.getContext('2d');
+                this.litePaintBase(ctx, sc);
+                if (sc.glow && bloom > 0) {
+                    const lv = this.liteBloomLevels(sc);
+                    ctx.imageSmoothingEnabled = true;
+                    ctx.imageSmoothingQuality = 'high';
+                    ctx.globalCompositeOperation = 'lighter';
+                    for (let pass = 0; pass < LITE_BLOOM_PASSES; pass++) {
+                        ctx.globalAlpha = 0.55 * bloom;
+                        ctx.drawImage(lv[1], 0, 0, sc.W, sc.H);
+                        ctx.globalAlpha = 0.4 * bloom;
+                        ctx.drawImage(lv[2], 0, 0, sc.W, sc.H);
+                    }
+                    ctx.globalAlpha = 1;
+                    ctx.globalCompositeOperation = 'source-over';
+                }
+                ctx.drawImage(this.liteDotsLayer(sc), 0, 0);
+            }
+
+            // Optional grow animation: replay recorded cells straight onto the canvas
+            // (no bloom while growing), then fade the glow in. Cost per frame is a few
+            // draw calls. Superseded renders bail out via the token.
+            liteAnimate(sc, log, token) {
+                const ctx = this.liteCanvas.getContext('2d');
+                const n = log.length / 3;
+                const p = sc.pitch;
+                this.litePaintBase(ctx, sc);
+                const start = performance.now();
+                let i = 0;
+                const grow = (now) => {
+                    if (token !== this.liteToken) return;
+                    const target = Math.min(n, Math.ceil((now - start) / (LITE_ANIM_SECONDS * 1000) * n));
+                    for (; i < target; i++) {
+                        const x = log[i * 3], y = log[i * 3 + 1], cell = log[i * 3 + 2];
+                        // Clear the cell first so overwritten LEDs don't leave a fringe
+                        ctx.fillStyle = sc.bg;
+                        ctx.fillRect(sc.ox + (x - sc.grid.minX) * p, sc.oy + (sc.grid.maxY - y) * p, p, p);
+                        this.liteLed(ctx, sc, x, y, cell.color);
+                    }
+                    if (i < n) { requestAnimationFrame(grow); return; }
+                    log.length = 0;
+                    const FADE_FRAMES = 12;
+                    let k = 0;
+                    const fade = () => {
+                        if (token !== this.liteToken) return;
+                        k++;
+                        this.liteDraw(sc, sc.glow ? k / FADE_FRAMES : 1);
+                        if (sc.glow && k < FADE_FRAMES) requestAnimationFrame(fade);
+                    };
+                    requestAnimationFrame(fade);
+                };
+                requestAnimationFrame(grow);
             }
 
             applyDefaults() {
@@ -5080,7 +5372,8 @@
                 // The main hazard is HTML string generation in render() on every animation tick.
                 // Unlit panel mode + large bounding boxes can produce gigabytes of strings during
                 // animation. We estimate worst-case total render bytes and clamp layers until safe.
-                const safeResult = safeLayerCount(options);
+                if (this.lite) options.instant = true;
+                const safeResult = this.lite ? this.liteLayerCap(options) : safeLayerCount(options);
                 if (safeResult.clamped) {
                     const m = safeResult.metrics;
                     console.warn(
@@ -5108,6 +5401,13 @@
                 const rng    = new SeededRandom(options.seed);
                 const grid   = new Grid();
 
+                // Lite animation: record cells in draw order, replay them on the canvas
+                let liteLog = null;
+                if (this.lite && this.liteAnim) {
+                    liteLog = [];
+                    grid.renderHook = (x, y, cell) => { liteLog.push(x, y, cell); };
+                }
+
                 const rootX = 0;
                 // Resolve tree class before computing rootY so Cascade (and any future
                 // type) can declare how much extra vertical space it needs above the pot.
@@ -5128,7 +5428,12 @@
 
                 const showUnlit = options.unlitPanel;
 
-                if (options.instant) {
+                if (this.lite) {
+                    grid.renderHook = null;
+                    this.lastGrid = grid;
+                    this.lastGridBounds = null;
+                    this.renderLite(grid, options, liteLog);
+                } else if (options.instant) {
                     this.lastGrid = grid;
                     this.lastGridBounds = null;
                     this.canvas.innerHTML = grid.render(showUnlit);

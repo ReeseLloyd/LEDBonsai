@@ -1,5 +1,5 @@
 # LEDBonsai — Documentation
-**Version 1.34**
+**Version 1.35**
 
 LEDBonsai is a single-file, self-contained HTML application that generates procedural bonsai trees rendered as glowing LED dot-matrix displays. Trees are deterministic — any tree can be exactly reproduced from its seed and settings. No server, no dependencies, no installation required.
 
@@ -153,6 +153,8 @@ Click the 📋 button to copy the URL to the clipboard.
 | `discover` | Discover mode on/off (`1`/`0`) |
 | `discoverbatch` | Number of candidates scanned per discovery pass |
 | `hidectrl` | Permanently hide focus-mode controls for kiosk use (`1`/`0`) |
+| `lite` | Lite mode on/off (`1`). Canvas-only ambient display for low-power devices (see [Lite Mode](#lite-mode-low-power-displays)) |
+| `liteanim` | Lite mode only: replay the tree growing on the canvas (`1`) |
 
 ---
 
@@ -280,10 +282,35 @@ The **⏸** button lets you freeze on a tree you like without leaving focus mode
 
 ---
 
+## Lite Mode (Low-Power Displays)
+
+Add `lite=1` to the URL to run LEDBonsai as a canvas-only ambient display, built for small boards such as a Raspberry Pi Zero 2 W with a 720×720 panel:
+
+```
+ledbonsai.html?lite=1
+```
+
+- **Canvas renderer** — the tree is drawn on a single `<canvas>` at an integer pixel pitch (square LEDs) instead of thousands of text-shadowed DOM elements. Memory use is one bitmap, dots are pixel-exact, and the look doesn't depend on installed fonts.
+- **Same trees** — generation is unchanged, so any seed and settings (including share URLs from the full app) draw the identical tree. Only the Layers value is clamped, to keep the estimated dot count under a generation-friendly limit.
+- **Glow** — when *Vary glow by density* is on (default), a cheap bloom (downscaled copies blended back) replaces per-LED text shadows. It costs a few blits regardless of LED count.
+- **Auto-advance + discovery** — lite mode implies unattended display: auto-advance defaults to 300 s, each new tree is the best of `discoverbatch` candidates (default 12), and the controls are hidden. Candidates too large to stay legible (below 4 px per LED) are penalized, and trees that fill more of the panel get a small bonus.
+- **Opening tree** — with no `seed` in the URL, lite mode opens on a discovered tree; with a `seed`, it shows that tree first.
+- **`liteanim=1`** — optional: replays the tree growing dot by dot (about 8 s), then fades the glow in. Off by default.
+
+`ssinterval`, `discoverbatch`, `glow`, `fruit`, `unlit` (whole-screen unlit LED lattice) and `canbg` work as usual. Tuning constants (`LITE_*`) are grouped together near the top of the script.
+
+Kiosk example (Raspberry Pi):
+```
+chromium --kiosk "http://your-host/ledbonsai.html?lite=1"
+```
+
+---
+
 ## Version History
 
 | Version | Changes |
 |---|---|
+| **1.35** | Added Lite mode (`lite=1`, optional `liteanim=1`): canvas renderer with square LEDs, cheap bloom glow, best-of-N discovery and 300 s auto-advance for low-power displays (Pi Zero 2 W). Non-breaking — full app unchanged |
 | **1.34** | Realism pass 2: recalibrated the quality metric on 600 ratings (trunk-led, size now a sweet-spot rather than "bigger=better"); trimmed the randomize size range to the sweet spot. Non-breaking |
 | **1.33** | Realism pass 1: bias generation toward larger trees (randomize ranges + defaults raised); replaced the discovery quality score with a metric fitted to human ratings (size + readable trunk + foliage cohesion + openness). Non-breaking — existing seeds still reproduce |
 | **1.32** | Updated "Inspired by" credit: replaced JSBonsai with a link to cbonsai (the actual upstream inspiration) |

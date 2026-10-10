@@ -66,7 +66,12 @@ There are no versioned files (e.g. `ledbonsai-v1_22.html`). Git history is the v
 ### URL Parameter System
 - After generation, all current settings are encoded as URL query parameters for sharing.
 - **Every new user-facing setting must also be added as a URL parameter** so shared links remain complete.
-- Existing parameters: `seed`, `type`, `layers`, `len`, `angle`, `leaf`, `palette`, `mono`, `potcolor`, `potsize`, `glow`, `fruit`, `unlit`, `canbg`, `screensaver`, `ssinterval`, `focus`, `discover`, `discoverbatch`, `hidectrl`.
+- Existing parameters: `seed`, `type`, `layers`, `len`, `angle`, `leaf`, `palette`, `mono`, `potcolor`, `potsize`, `glow`, `fruit`, `unlit`, `canbg`, `screensaver`, `ssinterval`, `focus`, `discover`, `discoverbatch`, `hidectrl`, `lite`, `liteanim`.
+
+### Lite Mode (`?lite=1`)
+- A canvas-only renderer for low-power displays (Pi Zero 2 W, 720×720). Same file, same tree classes, same seeds — only rendering and scheduling differ.
+- Branches live in `LEDBonsai`: `initLite`, `renderLite`, `liteDraw`, `liteAnimate`, `liteLayerCap`, and `lite` checks in `generate()`, `discoverTree()`, `scheduleNextTree()`, `loadFromUrl()`, `buildShareUrl()`. Tuning constants are the `LITE_*` block.
+- Keep generation code free of lite-specific behavior; do not fork the file.
 
 ### Pin System
 - Pins are saved to `localStorage` under the key `ledbonsai_pins`, capped at 50 entries.
