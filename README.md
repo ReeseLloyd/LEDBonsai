@@ -1,5 +1,5 @@
 # LEDBonsai — Documentation
-**Version 1.35**
+**Version 1.36**
 
 LEDBonsai is a single-file, self-contained HTML application that generates procedural bonsai trees rendered as glowing LED dot-matrix displays. Trees are deterministic — any tree can be exactly reproduced from its seed and settings. No server, no dependencies, no installation required.
 
@@ -295,6 +295,7 @@ ledbonsai.html?lite=1
 - **Glow** — when *Vary glow by density* is on (default), a cheap bloom (downscaled copies blended back) replaces per-LED text shadows. It costs a few blits regardless of LED count.
 - **Auto-advance + discovery** — lite mode implies unattended display: auto-advance defaults to 300 s, each new tree is the best of `discoverbatch` candidates (default 12), and the controls are hidden. Candidates too large to stay legible (below 4 px per LED) are penalized, and trees that fill more of the panel get a small bonus.
 - **Opening tree** — with no `seed` in the URL, lite mode opens on a discovered tree; with a `seed`, it shows that tree first.
+- **Tap to skip** — clicking or touching anywhere advances to the next tree (the auto-advance timer restarts). The mouse cursor is hidden.
 - **`liteanim=1`** — optional: replays the tree growing dot by dot (about 8 s), then fades the glow in. Off by default.
 
 `ssinterval`, `discoverbatch`, `glow`, `fruit`, `unlit` (whole-screen unlit LED lattice) and `canbg` work as usual. Tuning constants (`LITE_*`) are grouped together near the top of the script.
@@ -310,6 +311,7 @@ chromium --kiosk "http://your-host/ledbonsai.html?lite=1"
 
 | Version | Changes |
 |---|---|
+| **1.36** | Lite mode: tap/click anywhere to advance to the next tree; hide the mouse cursor |
 | **1.35** | Added Lite mode (`lite=1`, optional `liteanim=1`): canvas renderer with square LEDs, cheap bloom glow, best-of-N discovery and 300 s auto-advance for low-power displays (Pi Zero 2 W). Non-breaking — full app unchanged |
 | **1.34** | Realism pass 2: recalibrated the quality metric on 600 ratings (trunk-led, size now a sweet-spot rather than "bigger=better"); trimmed the randomize size range to the sweet spot. Non-breaking |
 | **1.33** | Realism pass 1: bias generation toward larger trees (randomize ranges + defaults raised); replaced the discovery quality score with a metric fitted to human ratings (size + readable trunk + foliage cohesion + openness). Non-breaking — existing seeds still reproduce |
