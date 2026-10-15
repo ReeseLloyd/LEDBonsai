@@ -56,7 +56,7 @@ sleep 3
 chromium --kiosk --ozone-platform=wayland --noerrdialogs --disable-infobars \
   --disable-translate --check-for-update-interval=31536000 \
   --password-store=basic \
-  'http://reeselloyd.com/ledbonsai.html?screensaver=1&ssinterval=300&focus=1' &
+  'http://YOUR-HOST/ledbonsai.html?screensaver=1&ssinterval=300&focus=1' &
 AUTOSTART
 ```
 
@@ -164,7 +164,7 @@ if ! pgrep -x chromium > /dev/null; then
     chromium --kiosk --ozone-platform=wayland --noerrdialogs --disable-infobars \
       --disable-translate --check-for-update-interval=31536000 \
       --password-store=basic \
-      'http://reeselloyd.com/ledbonsai.html?screensaver=1&ssinterval=300&focus=1' &
+      'http://YOUR-HOST/ledbonsai.html?screensaver=1&ssinterval=300&focus=1' &
 fi
 SCRIPT
 chmod +x ~/chromium-watchdog.sh
@@ -195,7 +195,7 @@ cat > ~/wifi-watchdog.sh << 'SCRIPT'
 #!/bin/bash
 LOGFILE="/home/ledbonsai/wifi-watchdog.log"
 PING_HOST="1.1.1.1"
-WIFI_CONN="DeadLeg-5G"
+WIFI_CONN="YOUR_WIFI_NAME"
 
 log() {
     echo "$(date "+%Y-%m-%d %H:%M:%S") $1" >> "$LOGFILE"

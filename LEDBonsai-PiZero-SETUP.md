@@ -9,7 +9,7 @@ Companion to `LEDBonsai-PiSETUP.md` (Pi 3B / HDMI / labwc / web-hosted), which r
 | OS | Desktop 64-bit | **Lite, 32-bit** (Bookworm) |
 | Display | HDMI | **DPI on the GPIO header** (Waveshare 4inch DPI LCD (C)) |
 | Compositor | labwc (desktop session) | **cage** (single-app kiosk compositor) |
-| App source | `http://reeselloyd.com/...` | **Local file**, no network needed |
+| App source | a hosted URL (`http://YOUR-HOST/...`) | **Local file**, no network needed |
 | Rendering | DOM | **Canvas, software-rendered** (`--disable-gpu`) |
 | Reliability | cron watchdogs, weekly reboot | restart loop, overlay (read-only) filesystem, uptime-based daily reboot |
 

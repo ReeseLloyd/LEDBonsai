@@ -15,6 +15,9 @@ It is designed to run on desktop browsers, mobile (iPad/iPhone), and Raspberry P
 ledbonsai.html   ← the application (always the current version)
 README.md        ← documentation (always current, displayed on GitHub)
 CLAUDE.md        ← this file
+LICENSE          ← MIT
+LEDBonsai-PiSETUP.md      ← Raspberry Pi 3B / HDMI kiosk guide
+LEDBonsai-PiZero-SETUP.md ← Pi Zero 2 W offline Lite-mode kiosk guide
 .gitignore
 ```
 

@@ -278,6 +278,10 @@ LEDBonsai is designed to work well as an always-on ambient display.
    ```
 5. On iPad, add to Home Screen for full-screen display and persistent pin storage.
 
+**Step-by-step Raspberry Pi guides:**
+- [`LEDBonsai-PiZero-SETUP.md`](LEDBonsai-PiZero-SETUP.md): Raspberry Pi Zero 2 W with a 720×720 panel running [Lite mode](#lite-mode-low-power-displays), fully offline, with a read-only filesystem for unattended use.
+- [`LEDBonsai-PiSETUP.md`](LEDBonsai-PiSETUP.md): Raspberry Pi 3B-class with an HDMI display and the full app, served from a web host.
+
 The **⏸** button lets you freeze on a tree you like without leaving focus mode. **☆** pins it for later.
 
 ---
@@ -299,6 +303,8 @@ ledbonsai.html?lite=1
 - **`liteanim=1`** — optional: replays the tree growing dot by dot (about 8 s), then fades the glow in. Off by default.
 
 `ssinterval`, `discoverbatch`, `glow`, `fruit`, `unlit` (whole-screen unlit LED lattice) and `canbg` work as usual. Tuning constants (`LITE_*`) are grouped together near the top of the script.
+
+A complete offline Pi Zero 2 W build (panel setup, kiosk launch, read-only filesystem, troubleshooting) is documented in [`LEDBonsai-PiZero-SETUP.md`](LEDBonsai-PiZero-SETUP.md).
 
 Kiosk example (Raspberry Pi):
 ```
@@ -356,3 +362,9 @@ chromium --kiosk "http://your-host/ledbonsai.html?lite=1"
 | **0.34** | Added pause/resume button for animation and screensaver countdown; Space key shortcut |
 | **0.33** | Added version label to sidebar |
 | **0.32** | Memory safety: automatic layer clamping to prevent OOM on 512 MB systems |
+
+---
+
+## License
+
+MIT. See [`LICENSE`](LICENSE).
