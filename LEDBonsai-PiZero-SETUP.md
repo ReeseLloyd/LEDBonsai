@@ -188,6 +188,15 @@ left on (no schedule). The only visible effect is log timestamps.
 The panel is always on. A schedule would need a correct clock (Step 8) and a way to switch the DPI
 backlight (a PWM line on GPIO 18 per Waveshare); neither is set up. **(not implemented)**
 
+## 9a. Brightness
+
+Waveshare documents the backlight as a PWM line on GPIO 18 (0 to 1023, via WiringPi, `pinctrl` or sysfs). On this
+unit nothing drives that pin by default (GPIO 18 sits as an output held low, and the kernel's `gpio-backlight`
+driver fails to attach), and the panel is **already at its maximum brightness**. Tested live with `pigpio`
+(`pigs hp 18 1000 <duty>` at 25, 50, 75 and 100%) and with the pin held high: none looked brighter than the default,
+so no boot service is needed. Leave GPIO 18 alone. If it ever needs to be *dimmer*, PWM on GPIO 18 is the lever
+(`pigpiod` and `pigs` are installed); making it brighter would have to be done in software (palette or canvas gain).
+
 ## 10. WiFi for home and work
 
 Home WiFi comes from Imager. Add the work network (replace the placeholders) so the Pi joins whichever is in range:

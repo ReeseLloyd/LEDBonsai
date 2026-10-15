@@ -5,3 +5,10 @@
 
 # Local Pi scope/notes (not part of the published project)
 LEDBonsaiPi-Scope.md
+
+# Local helper scripts and analysis working files (not part of the published project)
+_misc/
+_realism/
+
+# Superseded by lite mode (?lite=1) in ledbonsai.html
+ledbonsai-lite-proto.html
